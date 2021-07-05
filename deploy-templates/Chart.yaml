@@ -1,0 +1,7 @@
+apiVersion: v2
+description: Helm chart for Java application/service deploying
+name: excerpt-service-api
+version: 1.0
+keywords:
+    - Java
+home: https://www.epam.com

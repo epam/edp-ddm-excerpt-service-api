@@ -1,0 +1,107 @@
+spring:
+  application:
+    name: excerpt-service-api
+  mvc:
+    throw-exception-if-no-handler-found: true
+  zipkin:
+    baseUrl: http://zipkin.istio-system.svc:9411
+    sender:
+      type: web
+  sleuth:
+    opentracing:
+      enabled: true
+    baggage:
+      correlation-enabled: true
+      remote-fields: x-request-id, x-access-token, x-source-system, x-source-application,
+        x-source-business-process, x-source-business-process
+      correlation-fields: x-request-id, x-access-token, x-source-system, x-source-application,
+        x-source-business-process, x-source-business-process
+  web:
+    resources:
+      add-mappings: false
+
+springdoc:
+  swagger-ui:
+    path: /openapi
+
+openapi:
+  request:
+    headers:
+      - X-Access-Token
+      - X-Digital-Signature
+      - X-Digital-Signature-Derived
+      - X-Source-System
+      - X-Source-Application
+      - X-Source-Business-Process
+      - X-Source-Business-Activity
+  response:
+    codes:
+      get-by-id: 200, 401, 403, 500, 501
+      post: 200, 400, 401, 403, 422, 500, 501
+
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: "*"
+    jmx:
+      exposure:
+        exclude: "*"
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+      group:
+        liveness:
+          include: livenessState, livenessResponseCheck
+        readiness:
+          include: readinessState, db, kafka
+    loggers:
+      enabled: true
+    prometheus:
+      enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+probes:
+  liveness:
+    failureThreshold: 10
+
+platform:
+  security:
+    enabled: true
+    whitelist:
+      - /openapi
+      - /v3/api-docs/**
+      - /swagger-ui/**
+      - /actuator/**
+
+logbook:
+  exclude:
+    - /openapi
+    - /v3/api-docs/**
+    - /swagger-ui/**
+    - /actuator/**
+
+request-signature-ceph:
+  bucket: ${REQUEST_SIGNATURE_CEPH_BUCKET_NAME}
+datafactory-excerpt-ceph:
+  bucket: ${DATAFACTORY_EXCERPT_CEPH_BUCKET_NAME}
+excerpt-signature-ceph:
+  bucket: ${EXCERPT_SIGNATURE_CEPH_BUCKET_NAME}
+
+data-platform:
+  kafka:
+    producer:
+      enabled: true
+    topic-properties:
+      creation:
+        enabled: true
+    topics:
+      pdf: generate-excerpt
+      docx: generate-excerpt-docx
+      csv: generate-excerpt-csv

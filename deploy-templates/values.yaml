@@ -1,0 +1,87 @@
+global:
+  kafkaOperator:
+    replicationFactor: 3
+  disableRequestsLimits: false
+
+name: excerpt-service-api
+
+version: 1.1.0
+
+port: 8080
+
+java:
+  javaOpts: -Xms330m -Xmx330m -Xmn200m -XX:+AlwaysPreTouch -XX:+UseG1GC
+
+service:
+  port: 8080
+
+ingress:
+  required: true
+  site: excerpt-api
+
+kafka:
+  service: kafka-cluster-kafka-bootstrap:9093
+  user: excerpt-api-user
+  clusterName: kafka-cluster
+  sslEnabled: true
+  sslCertType: PEM
+  sslUserKey: ${KAFKA_USER_KEYSTORE_KEY}
+  sslUserCertificate: ${KAFKA_USER_KEYSTORE_CERTIFICATE}
+  sslClusterCertificate: ${KAFKA_CLUSTER_TRUSTSTORE}
+  numPartitions: 15
+
+db:
+  url: citus-master
+  secret: citus-roles-secrets
+  name: excerpt
+  port: 5432
+  connectionTimeout: 4000
+
+s3:
+  config:
+    client:
+      protocol: http
+    options:
+      pathStyleAccess: true
+
+requestSignatureCeph:
+  httpEndpoint: ${REQUEST_SIGNATURE_CEPH_BUCKET_HOST}
+  bucketName: lowcode-form-data-storage
+
+datafactoryExcerptCeph:
+  httpEndpoint: ${DATAFACTORY_EXCERPT_CEPH_BUCKET_HOST}
+  bucketName: file-excerpt-bucket
+
+excerptSignatureCeph:
+  httpEndpoint: ${EXCERPT_SIGNATURE_CEPH_BUCKET_HOST}
+  bucketName: excerpt-signature-bucket
+
+dso:
+  url: http://digital-signature-ops:8080
+
+image:
+  name: excerpt-service-api
+  version: latest
+
+monitoring:
+  namespace: openshift-monitoring
+  prometheusScrapePath: /actuator/prometheus
+  jobLabel: app
+
+probes:
+  liveness:
+    path: /actuator/health/liveness
+  readiness:
+    path: /actuator/health/readiness
+
+keycloak:
+  realms:
+    officer: officer-portal
+    citizen: citizen-portal
+    admin: admin
+  certificatesEndpoint: /protocol/openid-connect/certs
+
+audit:
+  kafka:
+    topic: audit-events
+    schemaRegistryUrl: http://kafka-schema-registry:8081

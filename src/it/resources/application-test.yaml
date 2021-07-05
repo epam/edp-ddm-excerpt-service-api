@@ -1,0 +1,64 @@
+spring:
+  zipkin:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: update
+  autoconfigure:
+    exclude: com.epam.digital.data.platform.starter.database.DatabaseAutoConfiguration
+    
+data-platform:
+  signature:
+    enabled: false
+  kafka:
+    bootstrap: localhost:9092
+    topic-properties:
+      creation:
+        num-partitions: 1
+        replication-factor: 1
+    ssl:
+      enabled: false
+audit:
+  kafka:
+    bootstrap: localhost:9092
+    topic: audit-events
+    schema-registry-url: http://localhost:8081
+    ssl:
+      enabled: false
+
+request-signature-ceph:
+  http-endpoint: localhost:5555
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
+datafactory-excerpt-ceph:
+  http-endpoint: localhost:5555
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
+excerpt-signature-ceph:
+  http-endpoint: localhost:5555
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
+      
+dso:
+  url: http://digital-signature-ops:8080
+
+storage:
+  lowcode-form-form-data-storage:
+    type: ceph
+    backend:
+      ceph:
+        http-endpoint: ${request-signature-ceph.http-endpoint}
+        access-key: ${request-signature-ceph.access-key}
+        secret-key: ${request-signature-ceph.secret-key}
+        bucket: ${request-signature-ceph.bucket}
+  datafactory-excerpt-signature-storage:
+    type: ceph
+    backend:
+      ceph:
+        http-endpoint: ${excerpt-signature-ceph.http-endpoint}
+        access-key: ${excerpt-signature-ceph.access-key}
+        secret-key: ${excerpt-signature-ceph.secret-key}
+        bucket: ${excerpt-signature-ceph.bucket}

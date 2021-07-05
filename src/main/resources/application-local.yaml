@@ -1,0 +1,89 @@
+spring:
+  zipkin:
+    enabled: false
+
+data-platform:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/excerpt
+    username: postgres
+    password: qwerty
+  kafka:
+    bootstrap: localhost:9092
+    topic-properties:
+      creation:
+        num-partitions: 1
+        replication-factor: 1
+    ssl:
+      enabled: false
+  signature:
+    enabled: false
+
+server:
+  port: 7001
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+request-signature-ceph:
+  http-endpoint: https://s3-openshift-storage.apps.cicd2.mdtu-ddm.projects.epam.com
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
+datafactory-excerpt-ceph:
+  http-endpoint: https://s3-openshift-storage.apps.cicd2.mdtu-ddm.projects.epam.com
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
+excerpt-signature-ceph:
+  http-endpoint: https://s3-openshift-storage.apps.cicd2.mdtu-ddm.projects.epam.com
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
+
+s3:
+  config:
+    client:
+      protocol: http
+    options:
+      pathStyleAccess: true
+
+dso:
+  url: https://dig-sign-ops-lowcode-dev-dev.apps.cicd2.mdtu-ddm.projects.epam.com
+
+logging:
+  level:
+    root: INFO
+    org.zalando.logbook: TRACE
+  pattern:
+    #   Logging patterns inherited from Spring Boot default logging system configuration
+    #   add tracing
+    console: '%d{${LOG_DATEFORMAT_PATTERN}} [trace:%X{traceId}/%X{spanId}/%X{x-request-id}] ${LOG_LEVEL_PATTERN} %pid --- [%15.15t] %-40.40c{1.} : %m%n${LOG_EXCEPTION_CONVERSION_WORD}'
+
+audit:
+  kafka:
+    bootstrap: localhost:9092
+    topic: audit-events
+    schema-registry-url: http://localhost:8081
+    ssl:
+      enabled: false
+
+storage:
+  lowcode-form-form-data-storage:
+    type: ceph
+    backend:
+      ceph:
+        http-endpoint: ${request-signature-ceph.http-endpoint}
+        access-key: ${request-signature-ceph.access-key}
+        secret-key: ${request-signature-ceph.secret-key}
+        bucket: ${request-signature-ceph.bucket}
+  datafactory-excerpt-signature-storage:
+    type: ceph
+    backend:
+      ceph:
+        http-endpoint: ${excerpt-signature-ceph.http-endpoint}
+        access-key: ${excerpt-signature-ceph.access-key}
+        secret-key: ${excerpt-signature-ceph.secret-key}
+        bucket: ${excerpt-signature-ceph.bucket}

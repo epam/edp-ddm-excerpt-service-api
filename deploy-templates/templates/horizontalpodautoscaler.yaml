@@ -1,0 +1,23 @@
+{{- if not .Values.global.disableRequestsLimits }}
+kind: HorizontalPodAutoscaler
+apiVersion: autoscaling/v2beta2
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+    relatedNamespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    kind: Deployment
+    name: {{ .Values.name }}-deployment
+    apiVersion: apps/v1
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+{{- end }}

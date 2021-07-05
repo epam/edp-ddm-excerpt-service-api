@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: excerpt-service-api-properties
+data:
+  config.yaml: |-
+    server.max-http-header-size: 32KB
+    data-platform:
+      datasource:
+        url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/{{.Values.db.name}}
+        connection-timeout: {{.Values.db.connectionTimeout}}
+      kafka:
+        bootstrap: {{ .Values.kafka.service }}
+        topic-properties:
+          creation:
+            num-partitions: {{ .Values.kafka.numPartitions }}
+            replication-factor: {{ .Values.global.kafkaOperator.replicationFactor }}
+        ssl:
+          enabled: {{ .Values.kafka.sslEnabled }}
+          keystore-type: {{ .Values.kafka.sslCertType }}
+          truststore-type: {{ .Values.kafka.sslCertType }}
+          keystore-certificate: {{ .Values.kafka.sslUserCertificate }}
+          keystore-key: {{ .Values.kafka.sslUserKey }}
+          truststore-certificate: {{ .Values.kafka.sslClusterCertificate }}
+      signature:
+        enabled: true
+
+    s3:
+      config:
+        client: {{ .Values.s3.config.client | toYaml | nindent 10 }}
+        options: {{ .Values.s3.config.options | toYaml | nindent 10 }}
+
+    dso:
+      url: {{ .Values.dso.url }}
+
+    request-signature-ceph:
+      http-endpoint: {{ .Values.requestSignatureCeph.httpEndpoint }}
+      bucketName: {{ .Values.requestSignatureCeph.bucketName }}
+    datafactory-excerpt-ceph:
+      http-endpoint: {{ .Values.datafactoryExcerptCeph.httpEndpoint }}
+      bucketName: {{ .Values.datafactoryExcerptCeph.bucketName }}
+    excerpt-signature-ceph:
+      http-endpoint: {{ .Values.excerptSignatureCeph.httpEndpoint }}
+      bucketName: {{ .Values.excerptSignatureCeph.bucketName }}
+
+    audit:
+      kafka:
+        bootstrap: {{ .Values.kafka.service }}
+        topic: {{ .Values.audit.kafka.topic }}
+        schema-registry-url: {{ .Values.audit.kafka.schemaRegistryUrl }}
+        ssl:
+          enabled: {{ .Values.kafka.sslEnabled }}
+          keystore-certificate: {{ .Values.kafka.sslUserCertificate }}
+          keystore-key: {{ .Values.kafka.sslUserKey }}
+          truststore-certificate: {{ .Values.kafka.sslClusterCertificate }}
+
+    storage:
+      lowcode-form-form-data-storage:
+        type: ceph
+        backend:
+          ceph:
+            http-endpoint: ${request-signature-ceph.http-endpoint}
+            access-key: ${request-signature-ceph.access-key}
+            secret-key: ${request-signature-ceph.secret-key}
+            bucket: ${request-signature-ceph.bucket}
+      datafactory-excerpt-signature-storage:
+        type: ceph
+        backend:
+          ceph:
+            http-endpoint: ${excerpt-signature-ceph.http-endpoint}
+            access-key: ${excerpt-signature-ceph.access-key}
+            secret-key: ${excerpt-signature-ceph.secret-key}
+            bucket: ${excerpt-signature-ceph.bucket}
