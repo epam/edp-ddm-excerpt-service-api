@@ -1,0 +1,34 @@
+spring:
+  zipkin:
+    enabled: false
+
+data-platform:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/excerpt
+    username: postgres
+    password: qwerty
+  kafka:
+    bootstrap: localhost:9092
+
+server:
+  port: 7001
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+datafactory-excerpt-ceph:
+  http-endpoint: https://s3-openshift-storage.apps.cicd2.mdtu-ddm.projects.epam.com
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
+
+logging:
+  level:
+    root: "info"
+  pattern:
+    #   Logging patterns inherited from Spring Boot default logging system configuration
+    #   add tracing
+    console: '%d{${LOG_DATEFORMAT_PATTERN}} [trace:%X{traceId}/%X{spanId}/%X{x-request-id}] ${LOG_LEVEL_PATTERN} %pid --- [%15.15t] %-40.40c{1.} : %m%n${LOG_EXCEPTION_CONVERSION_WORD}'

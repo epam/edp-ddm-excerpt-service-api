@@ -1,0 +1,43 @@
+name: excerpt-service-api
+
+version: 1.1.0
+
+port: 8080
+
+service:
+  port: 8080
+
+ingress:
+  required: true
+  site: excerpt-api
+
+kafka:
+  service: kafka-cluster-kafka-bootstrap:9092
+
+db:
+  url: citus-master
+  secret: citus-roles-secrets
+  name: excerpt
+  port: 5432
+  connectionTimeout: 4000
+
+datafactoryExcerptCeph:
+  httpEndpoint: http://s3.openshift-storage.svc.cluster.local
+  bucketName: file-excerpt-bucket
+
+image:
+  name: excerpt-service-api
+  version: latest
+
+monitoring:
+  namespace: openshift-monitoring
+  prometheusScrapePath: /actuator/prometheus
+  jobLabel: app
+
+probes:
+  liveness:
+    path: /actuator/health/liveness
+  readiness:
+    path: /actuator/health/readiness
+
+dockerProxyRegistry: nexus-docker-registry.apps.cicd2.mdtu-ddm.projects.epam.com

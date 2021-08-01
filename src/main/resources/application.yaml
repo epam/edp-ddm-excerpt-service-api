@@ -1,0 +1,90 @@
+spring:
+  application:
+    name: excerpt-service-api
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+  zipkin:
+    baseUrl: http://zipkin.istio-system.svc:9411
+    sender:
+      type: web
+  sleuth:
+    opentracing:
+      enabled: true
+    baggage:
+      correlation-enabled: true
+      remote-fields: x-request-id, x-access-token
+      correlation-fields: x-request-id
+
+springdoc:
+  swagger-ui:
+    path: /openapi
+
+openapi:
+  request:
+    headers:
+      - X-Access-Token
+  response:
+    codes:
+      get-by-id: 200, 401, 403, 500, 501
+      post: 200, 400, 401, 403, 422, 500, 501
+
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: "*"
+    jmx:
+      exposure:
+        exclude: "*"
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+      group:
+        liveness:
+          include: livenessState, livenessResponseCheck
+        readiness:
+          include: readinessState, kafka, db
+    loggers:
+      enabled: true
+    prometheus:
+      enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+probes:
+  liveness:
+    failureThreshold: 10
+
+platform:
+  security:
+    enabled: true
+    whitelist:
+      - /openapi
+      - /v3/api-docs/**
+      - /swagger-ui/**
+      - /actuator/**
+
+datafactory-excerpt-ceph:
+  bucket: ${DATAFACTORY_EXCERPT_CEPH_BUCKET_NAME}
+
+data-platform:
+  kafka:
+    group-id: excerpt-service-api
+    trusted-packages:
+      - com.epam.digital.data.platform.excerpt.api.model
+    error-handler:
+      initial-interval: 1500
+      max-elapsed-time: 6000
+      multiplier: 2
+    topic-properties:
+      num-partitions: 1
+      replication-factor: 1
+      retention-policy-in-days: 7
+    topic: generate-excerpt

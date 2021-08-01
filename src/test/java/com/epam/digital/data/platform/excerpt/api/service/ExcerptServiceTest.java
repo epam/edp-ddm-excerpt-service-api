@@ -1,0 +1,144 @@
+package com.epam.digital.data.platform.excerpt.api.service;
+
+import static com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStatus.FAILED;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.epam.digital.data.platform.excerpt.api.exception.ExcerptNotFoundException;
+import com.epam.digital.data.platform.excerpt.api.exception.ExcerptProcessingException;
+import com.epam.digital.data.platform.excerpt.api.repository.RecordRepository;
+import com.epam.digital.data.platform.excerpt.api.repository.TemplateRepository;
+import com.epam.digital.data.platform.excerpt.dao.ExcerptRecord;
+import com.epam.digital.data.platform.excerpt.dao.ExcerptTemplate;
+import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
+import com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStatus;
+import com.epam.digital.data.platform.integration.ceph.service.CephService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class ExcerptServiceTest {
+
+  static final UUID ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+
+  static final String BUCKET = "BUCKET";
+  static final String ENCODED_STRING = Base64.getEncoder().encodeToString("test".getBytes());
+
+  ExcerptService instance;
+
+  @Mock
+  RecordRepository recordRepository;
+
+  @Mock
+  TemplateRepository templateRepository;
+
+  @Mock
+  KafkaHelper kafkaHelper;
+
+  @Mock
+  CephService excerptCephService;
+
+  @BeforeEach
+  void setup() {
+    instance = new ExcerptService(recordRepository, templateRepository, kafkaHelper,
+        excerptCephService, BUCKET);
+  }
+
+  @Nested
+  class Get {
+
+    @Test
+    void failWhenCephServiceFails() {
+      when(recordRepository.findById(any())).thenReturn(Optional.of(new ExcerptRecord()));
+      when(excerptCephService.getContent(any(), any())).thenThrow(new RuntimeException());
+      assertThrows(ExcerptProcessingException.class, () -> instance.getExcerpt(ID));
+    }
+
+    @Test
+    void failWhenNoRecordFound() {
+      assertThrows(ExcerptNotFoundException.class, () -> instance.getExcerpt(ID));
+    }
+
+    @Test
+    void returnResource() {
+      when(recordRepository.findById(any())).thenReturn(Optional.of(new ExcerptRecord()));
+      when(excerptCephService.getContent(any(), any())).thenReturn(ENCODED_STRING);
+
+      var resource = instance.getExcerpt(ID);
+
+      assertThat(resource.getByteArray()).isEqualTo("test".getBytes());
+    }
+  }
+
+  @Nested
+  class Status {
+
+    @Test
+    void failWhenRecordNotFound() {
+      assertThrows(ExcerptProcessingException.class, () -> instance.getStatus(ID));
+    }
+
+    @Test
+    void returnStatus() {
+      var expectedStatus = FAILED;
+      var expectedDetails = "some details";
+      setupStatusFound(expectedStatus, expectedDetails);
+
+      var status = instance.getStatus(ID);
+
+      assertThat(status.getStatus()).isEqualTo(expectedStatus);
+      assertThat(status.getStatusDetails()).isEqualTo(expectedDetails);
+    }
+  }
+
+  @Nested
+  class Generate {
+
+    @Test
+    void failWhenTemplateTypeNotFound() {
+      assertThrows(ExcerptProcessingException.class, () -> instance.generateExcerpt(buildExcerptEvent()));
+    }
+
+    @Test
+    void returnEntityId() {
+      setupExcerptFound(ID);
+
+      var entityId = instance.generateExcerpt(buildExcerptEvent());
+
+      verify(recordRepository).save(any());
+      verify(kafkaHelper).send(any(), any(), any());
+      assertThat(entityId.getExcerptIdentifier()).isEqualTo(ID);
+    }
+  }
+
+  private void setupStatusFound(ExcerptProcessingStatus status, String details) {
+    var record = new ExcerptRecord();
+    record.setStatus(status);
+    record.setStatusDetails(details);
+    when(recordRepository.findById(any())).thenReturn(Optional.of(record));
+  }
+
+  private void setupExcerptFound(UUID id) {
+    var record = new ExcerptRecord();
+    record.setId(id);
+    when(templateRepository.findFirstByTemplateName("test_type")).thenReturn(Optional.of(new ExcerptTemplate()));
+    when(recordRepository.save(any())).thenReturn(record);
+  }
+
+  private ExcerptEventDto buildExcerptEvent() {
+    return new ExcerptEventDto(ID, "test_type", new HashMap<>(), false);
+  }
+}
