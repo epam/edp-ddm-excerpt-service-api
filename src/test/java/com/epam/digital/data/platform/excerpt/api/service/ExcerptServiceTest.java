@@ -16,10 +16,8 @@ import com.epam.digital.data.platform.excerpt.dao.ExcerptTemplate;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
 import com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStatus;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,6 +62,7 @@ class ExcerptServiceTest {
     void failWhenCephServiceFails() {
       when(recordRepository.findById(any())).thenReturn(Optional.of(new ExcerptRecord()));
       when(excerptCephService.getContent(any(), any())).thenThrow(new RuntimeException());
+
       assertThrows(ExcerptProcessingException.class, () -> instance.getExcerpt(ID));
     }
 
@@ -73,9 +72,17 @@ class ExcerptServiceTest {
     }
 
     @Test
+    void failWhenNotFoundInCeph() {
+      when(recordRepository.findById(any())).thenReturn(Optional.of(new ExcerptRecord()));
+      when(excerptCephService.getContent(any(), any())).thenReturn(Optional.empty());
+
+      assertThrows(ExcerptNotFoundException.class, () -> instance.getExcerpt(ID));
+    }
+
+    @Test
     void returnResource() {
       when(recordRepository.findById(any())).thenReturn(Optional.of(new ExcerptRecord()));
-      when(excerptCephService.getContent(any(), any())).thenReturn(ENCODED_STRING);
+      when(excerptCephService.getContent(any(), any())).thenReturn(Optional.of(ENCODED_STRING));
 
       var resource = instance.getExcerpt(ID);
 

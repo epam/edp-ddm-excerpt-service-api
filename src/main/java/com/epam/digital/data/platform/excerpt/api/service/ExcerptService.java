@@ -55,16 +55,20 @@ public class ExcerptService {
 
   private void validateTemplate(String excerptType) {
     templateRepository.findFirstByTemplateName(excerptType)
-        .orElseThrow(() -> new ExcerptProcessingException(FAILED, "Template '" + excerptType + "' not found"));
+        .orElseThrow(() -> new ExcerptProcessingException(FAILED, "Template not found: " + excerptType));
   }
 
   public ByteArrayResource getExcerpt(UUID id) {
     String cephValue;
     var excerpt = recordRepository.findById(id)
-        .orElseThrow(() -> new ExcerptNotFoundException("Record " + id + " not found"));
+        .orElseThrow(() -> new ExcerptNotFoundException("Record not found in DB: " + id));
 
     try {
-      cephValue = excerptCephService.getContent(bucket, excerpt.getExcerptKey());
+      cephValue = excerptCephService.getContent(bucket, excerpt.getExcerptKey())
+          .orElseThrow(() ->
+              new ExcerptNotFoundException("Excerpt not found in Ceph: " + excerpt.getExcerptKey()));
+    } catch (ExcerptNotFoundException e) {
+      throw e;
     } catch (Exception e) {
       throw new ExcerptProcessingException(FAILED, e.getMessage());
     }
@@ -74,7 +78,7 @@ public class ExcerptService {
 
   public StatusDto getStatus(UUID id) {
     var excerptRecord = recordRepository.findById(id)
-        .orElseThrow(() -> new ExcerptProcessingException(FAILED, "Record " + id + " not found"));
+        .orElseThrow(() -> new ExcerptProcessingException(FAILED, "Record not found: " + id));
 
     return new StatusDto(excerptRecord.getStatus(), excerptRecord.getStatusDetails());
   }
