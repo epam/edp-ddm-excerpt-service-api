@@ -13,7 +13,6 @@ import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -59,21 +58,24 @@ public class ExcerptService {
   }
 
   public ByteArrayResource getExcerpt(UUID id) {
-    String cephValue;
+    byte[] cephValue;
     var excerpt = recordRepository.findById(id)
         .orElseThrow(() -> new ExcerptNotFoundException("Record not found in DB: " + id));
 
     try {
-      cephValue = excerptCephService.getContent(bucket, excerpt.getExcerptKey())
-          .orElseThrow(() ->
-              new ExcerptNotFoundException("Excerpt not found in Ceph: " + excerpt.getExcerptKey()));
-    } catch (ExcerptNotFoundException e) {
-      throw e;
+      cephValue =
+          excerptCephService
+              .getObject(bucket, excerpt.getExcerptKey())
+              .orElseThrow(
+                  () ->
+                      new ExcerptNotFoundException(
+                          "Excerpt not found in Ceph: " + excerpt.getExcerptKey()))
+              .getContent();
     } catch (Exception e) {
       throw new ExcerptProcessingException(FAILED, e.getMessage());
     }
 
-    return new ByteArrayResource(Base64.getDecoder().decode(cephValue));
+    return new ByteArrayResource(cephValue);
   }
 
   public StatusDto getStatus(UUID id) {

@@ -15,9 +15,10 @@ import com.epam.digital.data.platform.excerpt.dao.ExcerptRecord;
 import com.epam.digital.data.platform.excerpt.dao.ExcerptTemplate;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
 import com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStatus;
+import com.epam.digital.data.platform.integration.ceph.dto.CephObject;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
-import java.util.Base64;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +34,7 @@ class ExcerptServiceTest {
   static final UUID ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
 
   static final String BUCKET = "BUCKET";
-  static final String ENCODED_STRING = Base64.getEncoder().encodeToString("test".getBytes());
+  static final byte[] CEPH_CONTENT = "test".getBytes();
 
   ExcerptService instance;
 
@@ -61,8 +62,7 @@ class ExcerptServiceTest {
     @Test
     void failWhenCephServiceFails() {
       when(recordRepository.findById(any())).thenReturn(Optional.of(new ExcerptRecord()));
-      when(excerptCephService.getContent(any(), any())).thenThrow(new RuntimeException());
-
+      when(excerptCephService.getObject(any(), any())).thenThrow(new RuntimeException());
       assertThrows(ExcerptProcessingException.class, () -> instance.getExcerpt(ID));
     }
 
@@ -74,19 +74,20 @@ class ExcerptServiceTest {
     @Test
     void failWhenNotFoundInCeph() {
       when(recordRepository.findById(any())).thenReturn(Optional.of(new ExcerptRecord()));
-      when(excerptCephService.getContent(any(), any())).thenReturn(Optional.empty());
+      when(excerptCephService.getObject(any(), any())).thenReturn(Optional.empty());
 
-      assertThrows(ExcerptNotFoundException.class, () -> instance.getExcerpt(ID));
+      assertThrows(ExcerptProcessingException.class, () -> instance.getExcerpt(ID));
     }
 
     @Test
     void returnResource() {
       when(recordRepository.findById(any())).thenReturn(Optional.of(new ExcerptRecord()));
-      when(excerptCephService.getContent(any(), any())).thenReturn(Optional.of(ENCODED_STRING));
+      when(excerptCephService.getObject(any(), any()))
+          .thenReturn(Optional.of(new CephObject(CEPH_CONTENT, Map.of())));
 
       var resource = instance.getExcerpt(ID);
 
-      assertThat(resource.getByteArray()).isEqualTo("test".getBytes());
+      assertThat(resource.getByteArray()).isEqualTo(CEPH_CONTENT);
     }
   }
 
