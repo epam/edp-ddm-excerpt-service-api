@@ -1,5 +1,7 @@
 package com.epam.digital.data.platform.excerpt.api.controller;
 
+import com.epam.digital.data.platform.excerpt.api.annotation.HttpSecurityContext;
+import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
 import com.epam.digital.data.platform.excerpt.api.model.StatusDto;
 import com.epam.digital.data.platform.excerpt.api.service.ExcerptService;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
@@ -31,13 +33,15 @@ public class ExcerptController {
   }
 
   @PostMapping
-  public ResponseEntity<ExcerptEntityId> generate(@Valid @RequestBody ExcerptEventDto excerptEventDto) {
-    return ResponseEntity.ok().body(excerptService.generateExcerpt(excerptEventDto));
+  public ResponseEntity<ExcerptEntityId> generate(@Valid @RequestBody ExcerptEventDto excerptEventDto,
+      @HttpSecurityContext SecurityContext context) {
+    return ResponseEntity.ok().body(excerptService.generateExcerpt(excerptEventDto, context));
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<Resource> retrieve(@PathVariable("id") UUID id) {
-    var excerpt = excerptService.getExcerpt(id);
+  public ResponseEntity<Resource> retrieve(@PathVariable("id") UUID id,
+      @HttpSecurityContext SecurityContext context) {
+    var excerpt = excerptService.getExcerpt(id, context);
 
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_OCTET_STREAM)

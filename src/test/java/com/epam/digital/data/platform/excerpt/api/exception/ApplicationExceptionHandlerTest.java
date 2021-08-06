@@ -14,11 +14,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.epam.digital.data.platform.excerpt.api.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.excerpt.api.model.FieldsValidationErrorDetails;
-import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,6 +82,17 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
         .andExpect(status().isInternalServerError())
         .andExpect(matchAll(
             jsonPath("$.code").value(is("RUNTIME_ERROR")),
+            jsonPath("$.statusDetails").doesNotExist()));
+  }
+
+  @Test
+  void shouldReturnBadRequestOnInvalidKeycloakIdException() throws Exception {
+    when(mockService.getExcerpt(any())).thenThrow(InvalidKeycloakIdException.class);
+
+    mockMvc.perform(get(BASE_URL + "/{id}", ENTITY_ID))
+        .andExpect(status().isBadRequest())
+        .andExpect(matchAll(
+            jsonPath("$.code").value(is("INVALID_KEYCLOAK_ID")),
             jsonPath("$.statusDetails").doesNotExist()));
   }
 

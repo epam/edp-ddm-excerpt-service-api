@@ -59,7 +59,7 @@ class ExcerptControllerTest {
 
   @Test
   void getGeneratedId() throws Exception {
-    when(excerptService.generateExcerpt(any()))
+    when(excerptService.generateExcerpt(any(), any()))
         .thenReturn(new ExcerptEntityId(ID));
 
     mockMvc.perform(post(BASE_URL)
@@ -78,7 +78,7 @@ class ExcerptControllerTest {
 
   @Test
   void getExcerpt() throws Exception {
-    when(excerptService.getExcerpt(any()))
+    when(excerptService.getExcerpt(any(), any()))
         .thenReturn(new ByteArrayResource(Base64.getDecoder().decode(ENCODED_STRING)));
 
     mockMvc.perform(get(BASE_URL + "/{id}", ID))

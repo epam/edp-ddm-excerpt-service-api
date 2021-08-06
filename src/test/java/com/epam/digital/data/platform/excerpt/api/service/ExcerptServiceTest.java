@@ -9,8 +9,11 @@ import static org.mockito.Mockito.when;
 
 import com.epam.digital.data.platform.excerpt.api.exception.ExcerptNotFoundException;
 import com.epam.digital.data.platform.excerpt.api.exception.ExcerptProcessingException;
+import com.epam.digital.data.platform.excerpt.api.exception.InvalidKeycloakIdException;
+import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
 import com.epam.digital.data.platform.excerpt.api.repository.RecordRepository;
 import com.epam.digital.data.platform.excerpt.api.repository.TemplateRepository;
+import com.epam.digital.data.platform.excerpt.api.util.JwtHelper;
 import com.epam.digital.data.platform.excerpt.dao.ExcerptRecord;
 import com.epam.digital.data.platform.excerpt.dao.ExcerptTemplate;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
@@ -50,10 +53,13 @@ class ExcerptServiceTest {
   @Mock
   CephService excerptCephService;
 
+  @Mock
+  JwtHelper jwtHelper;
+
   @BeforeEach
   void setup() {
     instance = new ExcerptService(recordRepository, templateRepository, kafkaHelper,
-        excerptCephService, BUCKET);
+        jwtHelper, excerptCephService, BUCKET);
   }
 
   @Nested
@@ -61,31 +67,54 @@ class ExcerptServiceTest {
 
     @Test
     void failWhenCephServiceFails() {
-      when(recordRepository.findById(any())).thenReturn(Optional.of(new ExcerptRecord()));
-      when(excerptCephService.getObject(any(), any())).thenThrow(new RuntimeException());
-      assertThrows(ExcerptProcessingException.class, () -> instance.getExcerpt(ID));
+      var record = new ExcerptRecord();
+      record.setKeycloakId("stubId");
+
+      when(recordRepository.findById(any())).thenReturn(Optional.of(record));
+      when(excerptCephService.getObject(any(), any())).thenReturn(Optional.empty());
+      when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
+
+      assertThrows(ExcerptNotFoundException.class, () -> instance.getExcerpt(ID, securityContext()));
+    }
+
+    @Test
+    void failWhenKeycloakIdDoesNotMatch() {
+      var record = new ExcerptRecord();
+      record.setKeycloakId("incorrectId");
+
+      when(recordRepository.findById(any())).thenReturn(Optional.of(record));
+      when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
+
+      assertThrows(InvalidKeycloakIdException.class, () -> instance.getExcerpt(ID, securityContext()));
     }
 
     @Test
     void failWhenNoRecordFound() {
-      assertThrows(ExcerptNotFoundException.class, () -> instance.getExcerpt(ID));
+      assertThrows(ExcerptNotFoundException.class, () -> instance.getExcerpt(ID, any()));
     }
 
     @Test
     void failWhenNotFoundInCeph() {
-      when(recordRepository.findById(any())).thenReturn(Optional.of(new ExcerptRecord()));
+      var record = new ExcerptRecord();
+      record.setKeycloakId("stubId");
+
+      when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
+      when(recordRepository.findById(any())).thenReturn(Optional.of(record));
       when(excerptCephService.getObject(any(), any())).thenReturn(Optional.empty());
 
-      assertThrows(ExcerptProcessingException.class, () -> instance.getExcerpt(ID));
+      assertThrows(ExcerptNotFoundException.class, () -> instance.getExcerpt(ID, securityContext()));
     }
 
     @Test
     void returnResource() {
-      when(recordRepository.findById(any())).thenReturn(Optional.of(new ExcerptRecord()));
-      when(excerptCephService.getObject(any(), any()))
-          .thenReturn(Optional.of(new CephObject(CEPH_CONTENT, Map.of())));
+      var record = new ExcerptRecord();
+      record.setKeycloakId("stubId");
 
-      var resource = instance.getExcerpt(ID);
+      when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
+      when(recordRepository.findById(any())).thenReturn(Optional.of(record));
+      when(excerptCephService.getObject(any(), any())).thenReturn(Optional.of(new CephObject(CEPH_CONTENT, Map.of())));
+
+      var resource = instance.getExcerpt(ID, securityContext());
 
       assertThat(resource.getByteArray()).isEqualTo(CEPH_CONTENT);
     }
@@ -96,7 +125,7 @@ class ExcerptServiceTest {
 
     @Test
     void failWhenRecordNotFound() {
-      assertThrows(ExcerptProcessingException.class, () -> instance.getStatus(ID));
+      assertThrows(ExcerptNotFoundException.class, () -> instance.getStatus(ID));
     }
 
     @Test
@@ -117,14 +146,14 @@ class ExcerptServiceTest {
 
     @Test
     void failWhenTemplateTypeNotFound() {
-      assertThrows(ExcerptProcessingException.class, () -> instance.generateExcerpt(buildExcerptEvent()));
+      assertThrows(ExcerptProcessingException.class, () -> instance.generateExcerpt(buildExcerptEvent(), new SecurityContext()));
     }
 
     @Test
     void returnEntityId() {
       setupExcerptFound(ID);
 
-      var entityId = instance.generateExcerpt(buildExcerptEvent());
+      var entityId = instance.generateExcerpt(buildExcerptEvent(), new SecurityContext());
 
       verify(recordRepository).save(any());
       verify(kafkaHelper).send(any(), any(), any());
@@ -148,5 +177,11 @@ class ExcerptServiceTest {
 
   private ExcerptEventDto buildExcerptEvent() {
     return new ExcerptEventDto(ID, "test_type", new HashMap<>(), false);
+  }
+
+  private SecurityContext securityContext() {
+    var context = new SecurityContext();
+    context.setAccessToken("stub");
+    return context;
   }
 }

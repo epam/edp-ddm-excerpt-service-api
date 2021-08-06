@@ -1,11 +1,13 @@
 package com.epam.digital.data.platform.excerpt.api.exception;
 
+import static com.epam.digital.data.platform.excerpt.api.util.Header.TRACE_ID;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import com.epam.digital.data.platform.excerpt.api.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.excerpt.api.model.FieldsValidationErrorDetails;
 import com.epam.digital.data.platform.excerpt.api.model.StatusDto;
+import com.epam.digital.data.platform.excerpt.api.util.Header;
 import com.fasterxml.jackson.databind.JsonMappingException.Reference;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import java.time.format.DateTimeParseException;
@@ -14,6 +16,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +35,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private final Logger log = LoggerFactory.getLogger(ApplicationExceptionHandler.class);
 
   private final String NOT_FOUND = "NOT_FOUND";
+  private final String INVALID_KEYCLOAK_ID = "INVALID_KEYCLOAK_ID";
   private final String RUNTIME_ERROR = "RUNTIME_ERROR";
   private final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
   private final String CLIENT_ERROR = "CLIENT_ERROR";
@@ -52,6 +56,14 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error(exception.getMessage(), exception);
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(newDetailedResponse(NOT_FOUND));
+  }
+
+  @ExceptionHandler(InvalidKeycloakIdException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleInvalidKeycloakIdException(
+      InvalidKeycloakIdException exception) {
+    log.error(exception.getMessage(), exception);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(newDetailedResponse(INVALID_KEYCLOAK_ID));
   }
 
   @ExceptionHandler(Exception.class)
@@ -103,8 +115,10 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     var parseException = handleParseException(exception);
     if (parseException.isPresent()) {
       log.error("Can not read some of arguments", exception);
+      var response = newDetailedResponse(CLIENT_ERROR);
+      response.setDetails(parseException.get());
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-          .body(parseException.get());
+          .body(response);
     }
 
     log.error("Request body is not readable JSON", exception);
@@ -142,6 +156,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 
   private <T> DetailedErrorResponse<T> newDetailedResponse(String code) {
     var response = new DetailedErrorResponse<T>();
+    response.setTraceId(MDC.get(TRACE_ID.getHeaderName()));
     response.setCode(code);
     return response;
   }

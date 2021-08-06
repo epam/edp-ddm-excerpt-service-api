@@ -27,6 +27,8 @@
       <!-- do not calc coverage for the classes without BL: -->
       **/model/**/*,
       **/config/**/*,
+      **/util/Header*,
+      **/annotation/**/*,
       **/ExcerptServiceApiApplication*,
     </sonar.coverage.exclusions>
   </properties>
