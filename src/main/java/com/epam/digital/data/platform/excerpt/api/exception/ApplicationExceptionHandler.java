@@ -3,16 +3,17 @@ package com.epam.digital.data.platform.excerpt.api.exception;
 import static com.epam.digital.data.platform.excerpt.api.util.Header.TRACE_ID;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 import com.epam.digital.data.platform.excerpt.api.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.excerpt.api.model.FieldsValidationErrorDetails;
 import com.epam.digital.data.platform.excerpt.api.model.StatusDto;
-import com.epam.digital.data.platform.excerpt.api.util.Header;
+import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
+import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
 import com.fasterxml.jackson.databind.JsonMappingException.Reference;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,13 +35,76 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 
   private final Logger log = LoggerFactory.getLogger(ApplicationExceptionHandler.class);
 
-  private final String NOT_FOUND = "NOT_FOUND";
-  private final String INVALID_KEYCLOAK_ID = "INVALID_KEYCLOAK_ID";
-  private final String RUNTIME_ERROR = "RUNTIME_ERROR";
-  private final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
-  private final String CLIENT_ERROR = "CLIENT_ERROR";
-  private final String VALIDATION_ERROR = "VALIDATION_ERROR";
-  private final String METHOD_ARGUMENT_TYPE_MISMATCH = "METHOD_ARGUMENT_TYPE_MISMATCH";
+  private static final String NOT_FOUND = "NOT_FOUND";
+  private static final String THIRD_PARTY_SERVICE_UNAVAILABLE = "THIRD_PARTY_SERVICE_UNAVAILABLE";
+  private static final String INTERNAL_CONTRACT_VIOLATION = "INTERNAL_CONTRACT_VIOLATION";
+  private static final String SIGNATURE_VIOLATION = "SIGNATURE_VIOLATION";
+  private static final String INVALID_HEADER_VALUE = "INVALID_HEADER_VALUE";
+  private static final String HEADERS_ARE_MISSING = "HEADERS_ARE_MISSING";
+  private static final String INVALID_KEYCLOAK_ID = "INVALID_KEYCLOAK_ID";
+  private static final String RUNTIME_ERROR = "RUNTIME_ERROR";
+  private static final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
+  private static final String CLIENT_ERROR = "CLIENT_ERROR";
+  private static final String VALIDATION_ERROR = "VALIDATION_ERROR";
+  private static final String METHOD_ARGUMENT_TYPE_MISMATCH = "METHOD_ARGUMENT_TYPE_MISMATCH";
+
+  @ExceptionHandler(CephCommunicationException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleCephCommunicationException(
+      Exception exception) {
+    log.error("Exception while communication with ceph", exception);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(THIRD_PARTY_SERVICE_UNAVAILABLE));
+  }
+
+  @ExceptionHandler(MisconfigurationException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleMisconfigurationException(
+      Exception exception) {
+    log.error("Ceph bucket not found", exception);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(INTERNAL_CONTRACT_VIOLATION));
+  }
+
+  @ExceptionHandler(KepServiceInternalServerErrorException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleInternalServerErrorException(
+      Exception exception) {
+    log.error("External digital signature service has internal server error", exception);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(THIRD_PARTY_SERVICE_UNAVAILABLE));
+  }
+
+  @ExceptionHandler(KepServiceBadRequestException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleBadRequestException(
+      Exception exception) {
+    log.error("Call to external digital signature service violates an internal contract",
+        exception);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(INTERNAL_CONTRACT_VIOLATION));
+  }
+
+  @ExceptionHandler(InvalidSignatureException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleSignatureValidationException(
+      InvalidSignatureException exception) {
+    log.error("Digital signature validation failed", exception);
+    return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
+        .body(newDetailedResponse(SIGNATURE_VIOLATION));
+  }
+
+  @ExceptionHandler(DigitalSignatureNotFoundException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleCephNoSuchObjectException(
+      DigitalSignatureNotFoundException exception) {
+    log.error("Digital signature not found", exception);
+    DetailedErrorResponse<Void> responseBody =
+        newDetailedResponse(INVALID_HEADER_VALUE);
+    return ResponseEntity.status(BAD_REQUEST).body(responseBody);
+  }
+
+  @ExceptionHandler(MandatoryHeaderMissingException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleMandatoryHeaderMissingException(
+      Exception exception) {
+    log.error("Mandatory header(s) missed", exception);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(newDetailedResponse(HEADERS_ARE_MISSING));
+  }
 
   @ExceptionHandler(ExcerptProcessingException.class)
   public ResponseEntity<StatusDto> handleTemplateNotFoundException(

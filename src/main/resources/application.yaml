@@ -25,6 +25,8 @@ openapi:
   request:
     headers:
       - X-Access-Token
+      - X-Digital-Signature
+      - X-Digital-Signature-Derived
   response:
     codes:
       get-by-id: 200, 401, 403, 500, 501
@@ -71,8 +73,12 @@ platform:
       - /swagger-ui/**
       - /actuator/**
 
+request-signature-ceph:
+  bucket: ${REQUEST_SIGNATURE_CEPH_BUCKET_NAME}
 datafactory-excerpt-ceph:
   bucket: ${DATAFACTORY_EXCERPT_CEPH_BUCKET_NAME}
+excerpt-signature-ceph:
+  bucket: ${EXCERPT_SIGNATURE_CEPH_BUCKET_NAME}
 
 data-platform:
   kafka:

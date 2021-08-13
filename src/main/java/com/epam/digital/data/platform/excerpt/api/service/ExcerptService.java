@@ -6,16 +6,19 @@ import static com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStat
 import com.epam.digital.data.platform.excerpt.api.exception.ExcerptNotFoundException;
 import com.epam.digital.data.platform.excerpt.api.exception.ExcerptProcessingException;
 import com.epam.digital.data.platform.excerpt.api.exception.InvalidKeycloakIdException;
+import com.epam.digital.data.platform.excerpt.api.exception.MandatoryHeaderMissingException;
 import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
 import com.epam.digital.data.platform.excerpt.api.model.StatusDto;
 import com.epam.digital.data.platform.excerpt.api.repository.RecordRepository;
 import com.epam.digital.data.platform.excerpt.api.repository.TemplateRepository;
+import com.epam.digital.data.platform.excerpt.api.util.Header;
 import com.epam.digital.data.platform.excerpt.api.util.JwtHelper;
 import com.epam.digital.data.platform.excerpt.dao.ExcerptRecord;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -33,30 +36,59 @@ public class ExcerptService {
   private final CephService excerptCephService;
   private final String bucket;
 
+  private final DigitalSignatureService digitalSignatureService;
+
   public ExcerptService(
       RecordRepository recordRepository,
       TemplateRepository templateRepository,
       KafkaHelper kafkaHelper,
       JwtHelper jwtHelper,
       CephService excerptCephService,
-      @Value("${datafactory-excerpt-ceph.bucket}") String bucket) {
+      @Value("${datafactory-excerpt-ceph.bucket}") String bucket,
+      DigitalSignatureService digitalSignatureService) {
     this.recordRepository = recordRepository;
     this.templateRepository = templateRepository;
     this.kafkaHelper = kafkaHelper;
     this.jwtHelper = jwtHelper;
     this.excerptCephService = excerptCephService;
     this.bucket = bucket;
+    this.digitalSignatureService = digitalSignatureService;
   }
 
   public ExcerptEntityId generateExcerpt(ExcerptEventDto excerptEventDto, SecurityContext context) {
     var excerptType = excerptEventDto.getExcerptType();
 
+    validateAndSaveSignatures(excerptEventDto, context);
     validateTemplate(excerptType);
 
     var newRecord = recordRepository.save(buildRecord(excerptEventDto, context));
     kafkaHelper.send(newRecord, excerptType, excerptEventDto.getExcerptInputData());
 
     return new ExcerptEntityId(newRecord.getId());
+  }
+
+  private void validateAndSaveSignatures(ExcerptEventDto excerptEventDto, SecurityContext context) {
+    verifyMandatoryHeaders(context);
+
+    digitalSignatureService
+        .checkSignature(excerptEventDto,
+            context.getDigitalSignatureDerived());
+
+    digitalSignatureService.saveSignature(context.getDigitalSignature());
+    digitalSignatureService.saveSignature(context.getDigitalSignatureDerived());
+  }
+
+  private void verifyMandatoryHeaders(SecurityContext context) {
+    var missedHeaders = new ArrayList<String>();
+    if (context.getDigitalSignature() == null) {
+      missedHeaders.add(Header.X_DIGITAL_SIGNATURE.getHeaderName());
+    }
+    if (context.getDigitalSignatureDerived() == null) {
+      missedHeaders.add(Header.X_DIGITAL_SIGNATURE_DERIVED.getHeaderName());
+    }
+    if (!missedHeaders.isEmpty()) {
+      throw new MandatoryHeaderMissingException(missedHeaders);
+    }
   }
 
   private void validateTemplate(String excerptType) {

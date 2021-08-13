@@ -1,0 +1,10 @@
+apiVersion: objectbucket.io/v1alpha1
+kind: ObjectBucketClaim
+metadata:
+  name: {{ .Values.excerptSignatureCeph.bucketName }}
+spec:
+  additionalConfig:
+    bucketclass: registry-bucket-class
+  generateBucketName: {{ .Values.excerptSignatureCeph.bucketName }}
+  storageClassName: registry-bucket
+  ssl: false

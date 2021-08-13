@@ -19,11 +19,24 @@ management:
       probes:
         enabled: true
 
+request-signature-ceph:
+  http-endpoint: https://s3-openshift-storage.apps.cicd2.mdtu-ddm.projects.epam.com
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
 datafactory-excerpt-ceph:
   http-endpoint: https://s3-openshift-storage.apps.cicd2.mdtu-ddm.projects.epam.com
   access-key: access-key
   secret-key: secret-key
   bucket: bucket
+excerpt-signature-ceph:
+  http-endpoint: https://s3-openshift-storage.apps.cicd2.mdtu-ddm.projects.epam.com
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
+
+dso:
+  url: https://dig-sign-ops-lowcode-dev-dev.apps.cicd2.mdtu-ddm.projects.epam.com
 
 logging:
   level:

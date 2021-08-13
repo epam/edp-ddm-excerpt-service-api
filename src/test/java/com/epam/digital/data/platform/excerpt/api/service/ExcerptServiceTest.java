@@ -2,6 +2,7 @@ package com.epam.digital.data.platform.excerpt.api.service;
 
 import static com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStatus.FAILED;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.epam.digital.data.platform.excerpt.api.exception.ExcerptNotFoundException;
 import com.epam.digital.data.platform.excerpt.api.exception.ExcerptProcessingException;
 import com.epam.digital.data.platform.excerpt.api.exception.InvalidKeycloakIdException;
+import com.epam.digital.data.platform.excerpt.api.exception.MandatoryHeaderMissingException;
 import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
 import com.epam.digital.data.platform.excerpt.api.repository.RecordRepository;
 import com.epam.digital.data.platform.excerpt.api.repository.TemplateRepository;
@@ -56,10 +58,13 @@ class ExcerptServiceTest {
   @Mock
   JwtHelper jwtHelper;
 
+  @Mock
+  DigitalSignatureService digitalSignatureService;
+
   @BeforeEach
   void setup() {
     instance = new ExcerptService(recordRepository, templateRepository, kafkaHelper,
-        jwtHelper, excerptCephService, BUCKET);
+        jwtHelper, excerptCephService, BUCKET, digitalSignatureService);
   }
 
   @Nested
@@ -74,7 +79,8 @@ class ExcerptServiceTest {
       when(excerptCephService.getObject(any(), any())).thenReturn(Optional.empty());
       when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
 
-      assertThrows(ExcerptNotFoundException.class, () -> instance.getExcerpt(ID, securityContext()));
+      assertThrows(ExcerptNotFoundException.class,
+          () -> instance.getExcerpt(ID, securityContext()));
     }
 
     @Test
@@ -85,7 +91,8 @@ class ExcerptServiceTest {
       when(recordRepository.findById(any())).thenReturn(Optional.of(record));
       when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
 
-      assertThrows(InvalidKeycloakIdException.class, () -> instance.getExcerpt(ID, securityContext()));
+      assertThrows(InvalidKeycloakIdException.class,
+          () -> instance.getExcerpt(ID, securityContext()));
     }
 
     @Test
@@ -102,7 +109,8 @@ class ExcerptServiceTest {
       when(recordRepository.findById(any())).thenReturn(Optional.of(record));
       when(excerptCephService.getObject(any(), any())).thenReturn(Optional.empty());
 
-      assertThrows(ExcerptNotFoundException.class, () -> instance.getExcerpt(ID, securityContext()));
+      assertThrows(ExcerptNotFoundException.class,
+          () -> instance.getExcerpt(ID, securityContext()));
     }
 
     @Test
@@ -112,7 +120,8 @@ class ExcerptServiceTest {
 
       when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
       when(recordRepository.findById(any())).thenReturn(Optional.of(record));
-      when(excerptCephService.getObject(any(), any())).thenReturn(Optional.of(new CephObject(CEPH_CONTENT, Map.of())));
+      when(excerptCephService.getObject(any(), any())).thenReturn(
+          Optional.of(new CephObject(CEPH_CONTENT, Map.of())));
 
       var resource = instance.getExcerpt(ID, securityContext());
 
@@ -146,18 +155,33 @@ class ExcerptServiceTest {
 
     @Test
     void failWhenTemplateTypeNotFound() {
-      assertThrows(ExcerptProcessingException.class, () -> instance.generateExcerpt(buildExcerptEvent(), new SecurityContext()));
+      assertThrows(ExcerptProcessingException.class,
+          () -> instance.generateExcerpt(buildExcerptEvent(), securityContext()));
     }
 
     @Test
     void returnEntityId() {
       setupExcerptFound(ID);
 
-      var entityId = instance.generateExcerpt(buildExcerptEvent(), new SecurityContext());
+      var entityId = instance.generateExcerpt(buildExcerptEvent(), securityContext());
 
       verify(recordRepository).save(any());
       verify(kafkaHelper).send(any(), any(), any());
       assertThat(entityId.getExcerptIdentifier()).isEqualTo(ID);
+    }
+
+    @Test
+    void exceptionIfHeadersAbsent() {
+
+      var expectedMessage = "Mandatory header(s) missed: [X-Digital-Signature, X-Digital-Signature-Derived]";
+
+      String actualMessage = null;
+      try {
+        instance.generateExcerpt(buildExcerptEvent(), new SecurityContext());
+      } catch (MandatoryHeaderMissingException e) {
+        actualMessage = e.getMessage();
+      }
+      assertEquals(expectedMessage, actualMessage);
     }
   }
 
@@ -171,7 +195,8 @@ class ExcerptServiceTest {
   private void setupExcerptFound(UUID id) {
     var record = new ExcerptRecord();
     record.setId(id);
-    when(templateRepository.findFirstByTemplateName("test_type")).thenReturn(Optional.of(new ExcerptTemplate()));
+    when(templateRepository.findFirstByTemplateName("test_type")).thenReturn(
+        Optional.of(new ExcerptTemplate()));
     when(recordRepository.save(any())).thenReturn(record);
   }
 
@@ -182,6 +207,8 @@ class ExcerptServiceTest {
   private SecurityContext securityContext() {
     var context = new SecurityContext();
     context.setAccessToken("stub");
+    context.setDigitalSignature("digital_signature");
+    context.setDigitalSignatureDerived("digital_signature_derived");
     return context;
   }
 }

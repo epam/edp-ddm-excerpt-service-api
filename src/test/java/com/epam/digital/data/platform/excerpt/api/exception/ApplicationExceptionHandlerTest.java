@@ -14,6 +14,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.epam.digital.data.platform.excerpt.api.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.excerpt.api.model.FieldsValidationErrorDetails;
+import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
+import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.UUID;
@@ -38,8 +40,11 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
   private static final String BASE_URL = "/mock";
   private static final UUID ENTITY_ID = UUID.fromString("123e4567-e89b-12d3-a456-426655440000");
 
-  private final String METHOD_ARGUMENT_TYPE_MISMATCH = "METHOD_ARGUMENT_TYPE_MISMATCH";
-  private final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
+  private static final String METHOD_ARGUMENT_TYPE_MISMATCH = "METHOD_ARGUMENT_TYPE_MISMATCH";
+  private static final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
+
+  private static final String VALID_INPUT = "{\"recordId\":\"6d34cbd7-dded-495a-a1c6-4f37d823b59d\","
+      + "\"excerptType\":\"validtype\",\"updatedAt\":\"2021-07-29T11:52:39.972053\"}";
 
   @Autowired
   private MockMvc mockMvc;
@@ -47,6 +52,111 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
   private ObjectMapper objectMapper;
   @MockBean
   private MockService mockService;
+
+  @Test
+  void shouldReturn500ThirdPartyServiceUnavailableWhenCephCommunicationException() throws Exception {
+    when(mockService.generateExcerpt(any())).thenThrow(CephCommunicationException.class);
+
+    mockMvc.perform(post(BASE_URL)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(VALID_INPUT))
+        .andExpect(status().isInternalServerError())
+        .andExpect(matchAll(
+            jsonPath("$.code").value(is("THIRD_PARTY_SERVICE_UNAVAILABLE")),
+            jsonPath("$.details").doesNotExist()))
+        .andExpect(response -> assertTrue(
+            response.getResolvedException() instanceof CephCommunicationException));
+  }
+
+  @Test
+  void shouldReturn500InternalContractViolationWhenMisconfigurationException() throws Exception {
+    when(mockService.generateExcerpt(any())).thenThrow(MisconfigurationException.class);
+
+    mockMvc.perform(post(BASE_URL)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(VALID_INPUT))
+        .andExpect(status().isInternalServerError())
+        .andExpect(matchAll(
+            jsonPath("$.code").value(is("INTERNAL_CONTRACT_VIOLATION")),
+            jsonPath("$.details").doesNotExist()))
+        .andExpect(response -> assertTrue(
+            response.getResolvedException() instanceof MisconfigurationException));
+  }
+
+  @Test
+  void shouldReturn500ThirdPartyServiceUnavailableWhenKepServiceInternalServerErrorException() throws Exception {
+    when(mockService.generateExcerpt(any())).thenThrow(KepServiceInternalServerErrorException.class);
+
+    mockMvc.perform(post(BASE_URL)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(VALID_INPUT))
+        .andExpect(status().isInternalServerError())
+        .andExpect(matchAll(
+            jsonPath("$.code").value(is("THIRD_PARTY_SERVICE_UNAVAILABLE")),
+            jsonPath("$.details").doesNotExist()))
+        .andExpect(response -> assertTrue(
+            response.getResolvedException() instanceof KepServiceInternalServerErrorException));
+  }
+
+  @Test
+  void shouldReturn500InternalContractViolationWhenKepServiceBadRequestException() throws Exception {
+    when(mockService.generateExcerpt(any())).thenThrow(KepServiceBadRequestException.class);
+
+    mockMvc.perform(post(BASE_URL)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(VALID_INPUT))
+        .andExpect(status().isInternalServerError())
+        .andExpect(matchAll(
+            jsonPath("$.code").value(is("INTERNAL_CONTRACT_VIOLATION")),
+            jsonPath("$.details").doesNotExist()))
+        .andExpect(response -> assertTrue(
+            response.getResolvedException() instanceof KepServiceBadRequestException));
+  }
+
+  @Test
+  void shouldReturn412SignatureViolationWhenInvalidSignatureException() throws Exception {
+    when(mockService.generateExcerpt(any())).thenThrow(InvalidSignatureException.class);
+
+    mockMvc.perform(post(BASE_URL)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(VALID_INPUT))
+        .andExpect(status().isPreconditionFailed())
+        .andExpect(matchAll(
+            jsonPath("$.code").value(is("SIGNATURE_VIOLATION")),
+            jsonPath("$.details").doesNotExist()))
+        .andExpect(response -> assertTrue(
+            response.getResolvedException() instanceof InvalidSignatureException));
+  }
+
+  @Test
+  void shouldReturn400InvalidHeaderValueWhenDigitalSignatureNotFoundException() throws Exception {
+    when(mockService.generateExcerpt(any())).thenThrow(DigitalSignatureNotFoundException.class);
+
+    mockMvc.perform(post(BASE_URL)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(VALID_INPUT))
+        .andExpect(status().isBadRequest())
+        .andExpect(matchAll(
+            jsonPath("$.code").value(is("INVALID_HEADER_VALUE")),
+            jsonPath("$.details").doesNotExist()))
+        .andExpect(response -> assertTrue(
+            response.getResolvedException() instanceof DigitalSignatureNotFoundException));
+  }
+
+  @Test
+  void shouldReturn400HeadersAreMissingWhenMandatoryHeaderMissingException() throws Exception {
+    when(mockService.generateExcerpt(any())).thenThrow(MandatoryHeaderMissingException.class);
+
+    mockMvc.perform(post(BASE_URL)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(VALID_INPUT))
+        .andExpect(status().isBadRequest())
+        .andExpect(matchAll(
+            jsonPath("$.code").value(is("HEADERS_ARE_MISSING")),
+            jsonPath("$.details").doesNotExist()))
+        .andExpect(response -> assertTrue(
+            response.getResolvedException() instanceof MandatoryHeaderMissingException));
+  }
 
   @Test
   void shouldReturnNotFoundWhenNoSuchElementException() throws Exception {

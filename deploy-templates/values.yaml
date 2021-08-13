@@ -21,9 +21,20 @@ db:
   port: 5432
   connectionTimeout: 4000
 
+requestSignatureCeph:
+  httpEndpoint: http://s3.openshift-storage.svc.cluster.local
+  bucketName: lowcode-form-data-storage
+
 datafactoryExcerptCeph:
   httpEndpoint: http://s3.openshift-storage.svc.cluster.local
   bucketName: file-excerpt-bucket
+
+excerptSignatureCeph:
+  httpEndpoint: http://s3.openshift-storage.svc.cluster.local
+  bucketName: excerpt-signature-bucket
+
+dso:
+  url: http://digital-signature-ops:8080
 
 image:
   name: excerpt-service-api

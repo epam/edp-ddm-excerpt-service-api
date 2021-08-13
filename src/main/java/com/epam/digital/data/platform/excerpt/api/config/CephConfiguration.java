@@ -24,6 +24,23 @@ public class CephConfiguration {
     return new CephServiceS3Impl(cephAmazonS3(uri, accessKey, secretKey));
   }
 
+  @Bean
+  public CephService excerptSignatureCephService(
+      @Value("${excerpt-signature-ceph.http-endpoint}") String uri,
+      @Value("${excerpt-signature-ceph.access-key}") String accessKey,
+      @Value("${excerpt-signature-ceph.secret-key}") String secretKey) {
+    return new CephServiceS3Impl(cephAmazonS3(uri, accessKey, secretKey));
+  }
+
+  @Bean
+  public CephService requestSignatureCephService(
+      @Value("${request-signature-ceph.http-endpoint}") String uri,
+      @Value("${request-signature-ceph.access-key}") String accessKey,
+      @Value("${request-signature-ceph.secret-key}") String secretKey
+  ) {
+    return new CephServiceS3Impl(cephAmazonS3(uri, accessKey, secretKey));
+  }
+
   private AmazonS3 cephAmazonS3(String uri, String accessKey, String secretKey) {
 
     var credentials =

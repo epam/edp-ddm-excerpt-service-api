@@ -19,9 +19,12 @@ public class SecurityContextResolver implements HandlerMethodArgumentResolver {
 
   @Override
   public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
-      NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
+      NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
     var context = new SecurityContext();
     context.setAccessToken(webRequest.getHeader(Header.ACCESS_TOKEN.getHeaderName()));
+    context.setDigitalSignature(webRequest.getHeader(Header.X_DIGITAL_SIGNATURE.getHeaderName()));
+    context.setDigitalSignatureDerived(
+        webRequest.getHeader(Header.X_DIGITAL_SIGNATURE_DERIVED.getHeaderName()));
     return context;
   }
 }

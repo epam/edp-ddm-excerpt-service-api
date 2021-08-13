@@ -61,8 +61,14 @@ spec:
             - mountPath: /app/secrets
               name: db-credentials
               readOnly: true
+            - mountPath: /app/secrets/requestsignatureceph
+              name: {{ .Chart.Name }}-request-signature-ceph-bucket-credentials
+              readOnly: true
             - mountPath: /app/secrets/datafactoryexcerptceph
               name: {{ .Chart.Name }}-datafactory-excerpt-ceph-bucket-credentials
+              readOnly: true
+            - mountPath: /app/secrets/excerptsignatureceph
+              name: {{ .Chart.Name }}-excerpt-signature-ceph-bucket-credentials
               readOnly: true
           env:
             - name: DB_URL
@@ -79,10 +85,20 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.db.secret }}
                   key: excerptSvcPass
+            - name: REQUEST_SIGNATURE_CEPH_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.requestSignatureCeph.bucketName }}
+                  key: BUCKET_NAME
             - name: DATAFACTORY_EXCERPT_CEPH_BUCKET_NAME
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Values.datafactoryExcerptCeph.bucketName }}
+                  key: BUCKET_NAME
+            - name: EXCERPT_SIGNATURE_CEPH_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.excerptSignatureCeph.bucketName }}
                   key: BUCKET_NAME
       initContainers:
         - name: init
@@ -117,6 +133,14 @@ spec:
                 path: data-platform.datasource.password
               - key: excerptSvcUser
                 path: data-platform.datasource.username
+        - name: {{ .Chart.Name }}-request-signature-ceph-bucket-credentials
+          secret:
+            secretName: {{ .Values.requestSignatureCeph.bucketName }}
+            items:
+              - key: AWS_ACCESS_KEY_ID
+                path: request-signature-ceph.access-key
+              - key: AWS_SECRET_ACCESS_KEY
+                path: request-signature-ceph.secret-key
         - name: {{ .Chart.Name }}-datafactory-excerpt-ceph-bucket-credentials
           secret:
             secretName: {{ .Values.datafactoryExcerptCeph.bucketName }}
@@ -125,3 +149,11 @@ spec:
                 path: datafactory-excerpt-ceph.access-key
               - key: AWS_SECRET_ACCESS_KEY
                 path: datafactory-excerpt-ceph.secret-key
+        - name: {{ .Chart.Name }}-excerpt-signature-ceph-bucket-credentials
+          secret:
+            secretName: {{ .Values.excerptSignatureCeph.bucketName }}
+            items:
+              - key: AWS_ACCESS_KEY_ID
+                path: excerpt-signature-ceph.access-key
+              - key: AWS_SECRET_ACCESS_KEY
+                path: excerpt-signature-ceph.secret-key

@@ -17,7 +17,9 @@ spring:
         enable-api: false
         paths:
           - /app/secrets
+          - /app/secrets/requestsignatureceph
           - /app/secrets/datafactoryexcerptceph
+          - /app/secrets/excerptsignatureceph
 ---
 spring:
   profiles: local
