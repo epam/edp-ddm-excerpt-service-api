@@ -17,12 +17,12 @@ import org.springframework.stereotype.Component;
 public class StartupGenerateExcerptKafkaTopicCreator {
   private static final long DAYS_TO_MS = 24 * 60 * 60 * 1000L;
 
-  private final AdminClient adminClient;
+  private final AdminClient kafkaAdminClient;
   private final KafkaProperties kafkaProperties;
 
-  public StartupGenerateExcerptKafkaTopicCreator(AdminClient adminClient,
+  public StartupGenerateExcerptKafkaTopicCreator(AdminClient kafkaAdminClient,
       KafkaProperties kafkaProperties) {
-    this.adminClient = adminClient;
+    this.kafkaAdminClient = kafkaAdminClient;
     this.kafkaProperties = kafkaProperties;
   }
 
@@ -37,7 +37,7 @@ public class StartupGenerateExcerptKafkaTopicCreator {
   private boolean isTopicExist(long maxElapsedTime) {
     boolean isExist;
     try {
-      isExist = adminClient.listTopics()
+      isExist = kafkaAdminClient.listTopics()
           .names()
           .get(maxElapsedTime, TimeUnit.MILLISECONDS)
           .contains(kafkaProperties.getTopic());
@@ -48,7 +48,7 @@ public class StartupGenerateExcerptKafkaTopicCreator {
   }
 
   private void create(long maxElapsedTime) {
-    var createTopicsResult = adminClient.createTopics(customize(kafkaProperties.getTopic()));
+    var createTopicsResult = kafkaAdminClient.createTopics(customize(kafkaProperties.getTopic()));
     try {
       createTopicsResult.all().get(maxElapsedTime, TimeUnit.MILLISECONDS);
     } catch (Exception e) {
