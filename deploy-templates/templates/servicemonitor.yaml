@@ -6,6 +6,7 @@ metadata:
   labels:
     app: {{ .Values.name }}
     namespace: {{ .Values.namespace }}
+    relatedNamespace: {{ .Release.Namespace }}
 spec:
   endpoints:
     - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
