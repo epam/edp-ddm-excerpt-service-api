@@ -40,7 +40,8 @@ dso:
 
 logging:
   level:
-    root: "info"
+    root: INFO
+    org.zalando.logbook: TRACE
   pattern:
     #   Logging patterns inherited from Spring Boot default logging system configuration
     #   add tracing

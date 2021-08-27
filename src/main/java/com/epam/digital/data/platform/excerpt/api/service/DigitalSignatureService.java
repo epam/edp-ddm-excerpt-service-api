@@ -14,6 +14,8 @@ import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -22,6 +24,9 @@ import org.springframework.stereotype.Component;
 public class DigitalSignatureService {
 
   private static final String SIGNATURE = "signature";
+
+  private final Logger log = LoggerFactory.getLogger(DigitalSignatureService.class);
+
   private final CephService requestSignatureCephService;
   private final CephService excerptSignatureCephService;
   private final String requestSignatureBucket;
@@ -45,7 +50,7 @@ public class DigitalSignatureService {
   }
 
   public void checkSignature(ExcerptEventDto data, String key) {
-
+    log.info("Retrieve Signature from Ceph");
     String responseFromCeph =
         requestSignatureCephService
             .getContent(requestSignatureBucket, key)
@@ -68,6 +73,7 @@ public class DigitalSignatureService {
   }
 
   public String saveSignature(String key) {
+    log.info("Store Signature to Ceph");
     String value =
         requestSignatureCephService
             .getContent(requestSignatureBucket, key)
@@ -80,6 +86,7 @@ public class DigitalSignatureService {
 
   private void verify(String signature, String data) {
     try {
+      log.info("Verify Signature");
       VerifyResponseDto responseDto = digitalSealRestClient.verify(
           new VerifyRequestDto(signature, data));
 

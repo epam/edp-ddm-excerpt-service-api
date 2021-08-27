@@ -8,6 +8,8 @@ import com.epam.digital.data.platform.excerpt.dao.ExcerptRecord;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
 import com.epam.digital.data.platform.excerpt.model.Request;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -16,6 +18,8 @@ import org.springframework.util.concurrent.ListenableFutureCallback;
 
 @Component
 public class KafkaHelper {
+
+  private final Logger log = LoggerFactory.getLogger(KafkaHelper.class);
 
   private final KafkaTemplate<String, Request<ExcerptEventDto>> kafkaTemplate;
   private final KafkaProperties kafkaProperties;
@@ -34,6 +38,7 @@ public class KafkaHelper {
     var event = new ExcerptEventDto(newRecord.getId(), name, json, newRecord.getSignatureRequired());
     Request<ExcerptEventDto> request = new Request<>(event);
 
+    log.info("Send Excerpt generation Event to Kafka");
     var future = kafkaTemplate.send(kafkaProperties.getTopic(), request);
     future.addCallback(new ListenableFutureCallback<>() {
 

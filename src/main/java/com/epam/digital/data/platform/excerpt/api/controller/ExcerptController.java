@@ -8,6 +8,8 @@ import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
 import java.util.UUID;
 import javax.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,8 @@ public class ExcerptController {
   private static final String CONTENT_DISPOSITION_HEADER_NAME = "Content-Disposition";
   private static final String ATTACHMENT_HEADER_VALUE = "attachment; filename=\"%s.pdf\"";
 
+  private final Logger log = LoggerFactory.getLogger(ExcerptController.class);
+
   private final ExcerptService excerptService;
 
   public ExcerptController(
@@ -35,12 +39,15 @@ public class ExcerptController {
   @PostMapping
   public ResponseEntity<ExcerptEntityId> generate(@Valid @RequestBody ExcerptEventDto excerptEventDto,
       @HttpSecurityContext SecurityContext context) {
+    log.info("Excerpt generation called");
     return ResponseEntity.ok().body(excerptService.generateExcerpt(excerptEventDto, context));
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Resource> retrieve(@PathVariable("id") UUID id,
       @HttpSecurityContext SecurityContext context) {
+    log.info("Excerpt retrieval called");
+
     var excerpt = excerptService.getExcerpt(id, context);
 
     return ResponseEntity.ok()
@@ -52,6 +59,8 @@ public class ExcerptController {
 
   @GetMapping("/{id}/status")
   public ResponseEntity<StatusDto> status(@PathVariable("id") UUID id) {
+    log.info("Excerpt status retrieval called");
+
     var status = excerptService.getStatus(id);
     return ResponseEntity.ok().body(status);
   }

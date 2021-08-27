@@ -20,12 +20,16 @@ import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ExcerptService {
+
+  private final Logger log = LoggerFactory.getLogger(ExcerptService.class);
 
   private final RecordRepository recordRepository;
   private final TemplateRepository templateRepository;
@@ -104,6 +108,7 @@ public class ExcerptService {
 
     validateKeycloakId(excerpt, context);
 
+    log.info("Find Excerpt in Ceph");
     cephValue =
         excerptCephService
             .getObject(bucket, excerpt.getExcerptKey())
