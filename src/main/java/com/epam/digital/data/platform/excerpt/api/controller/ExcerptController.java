@@ -2,12 +2,13 @@ package com.epam.digital.data.platform.excerpt.api.controller;
 
 import com.epam.digital.data.platform.excerpt.api.annotation.HttpSecurityContext;
 import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
-import com.epam.digital.data.platform.excerpt.api.model.StatusDto;
 import com.epam.digital.data.platform.excerpt.api.service.ExcerptService;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
 import java.util.UUID;
 import javax.validation.Valid;
+
+import com.epam.digital.data.platform.excerpt.model.StatusDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;

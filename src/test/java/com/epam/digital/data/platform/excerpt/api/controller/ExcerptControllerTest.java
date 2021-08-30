@@ -12,12 +12,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.excerpt.api.model.StatusDto;
 import com.epam.digital.data.platform.excerpt.api.service.ExcerptService;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 import java.util.Base64;
 import java.util.UUID;
-import org.junit.jupiter.api.Nested;
+
+import com.epam.digital.data.platform.excerpt.model.StatusDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;

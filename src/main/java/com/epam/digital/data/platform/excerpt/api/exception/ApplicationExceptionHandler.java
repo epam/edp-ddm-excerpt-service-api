@@ -7,7 +7,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 import com.epam.digital.data.platform.excerpt.api.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.excerpt.api.model.FieldsValidationErrorDetails;
-import com.epam.digital.data.platform.excerpt.api.model.StatusDto;
+import com.epam.digital.data.platform.excerpt.model.StatusDto;
 import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
 import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
 import com.fasterxml.jackson.databind.JsonMappingException.Reference;

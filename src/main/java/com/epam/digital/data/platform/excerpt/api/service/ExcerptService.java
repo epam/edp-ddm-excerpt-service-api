@@ -8,7 +8,6 @@ import com.epam.digital.data.platform.excerpt.api.exception.ExcerptProcessingExc
 import com.epam.digital.data.platform.excerpt.api.exception.InvalidKeycloakIdException;
 import com.epam.digital.data.platform.excerpt.api.exception.MandatoryHeaderMissingException;
 import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
-import com.epam.digital.data.platform.excerpt.api.model.StatusDto;
 import com.epam.digital.data.platform.excerpt.api.repository.RecordRepository;
 import com.epam.digital.data.platform.excerpt.api.repository.TemplateRepository;
 import com.epam.digital.data.platform.excerpt.api.util.Header;
@@ -16,6 +15,7 @@ import com.epam.digital.data.platform.excerpt.api.util.JwtHelper;
 import com.epam.digital.data.platform.excerpt.dao.ExcerptRecord;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
+import com.epam.digital.data.platform.excerpt.model.StatusDto;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
