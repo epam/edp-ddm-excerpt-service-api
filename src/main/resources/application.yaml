@@ -49,7 +49,7 @@ management:
         liveness:
           include: livenessState, livenessResponseCheck
         readiness:
-          include: readinessState, db
+          include: readinessState, db, kafka
     loggers:
       enabled: true
     prometheus:
