@@ -73,6 +73,13 @@ platform:
       - /swagger-ui/**
       - /actuator/**
 
+logbook:
+  exclude:
+    - /openapi
+    - /v3/api-docs/**
+    - /swagger-ui/**
+    - /actuator/**
+
 request-signature-ceph:
   bucket: ${REQUEST_SIGNATURE_CEPH_BUCKET_NAME}
 datafactory-excerpt-ceph:
