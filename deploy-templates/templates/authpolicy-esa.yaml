@@ -18,3 +18,8 @@ spec:
         - name: X-Access-Token
       issuer: {{ template "issuer.citizen" . }}
       jwksUri: {{ template "jwksUri.citizen" . }}
+    - forwardOriginalToken: true
+      fromHeaders:
+        - name: X-Access-Token
+      issuer: {{ template "issuer.admin" . }}
+      jwksUri: {{ template "jwksUri.admin" . }}
