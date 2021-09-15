@@ -11,6 +11,9 @@ data:
         connection-timeout: {{.Values.db.connectionTimeout}}
       kafka:
         bootstrap: {{ .Values.kafka.service }}
+        topic-properties:
+          num-partitions: 3
+          replication-factor: 3
 
     dso:
       url: {{ .Values.dso.url }}
