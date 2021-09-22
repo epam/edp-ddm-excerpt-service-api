@@ -7,4 +7,3 @@ spec:
     bucketclass: registry-bucket-class
   generateBucketName: {{ .Values.excerptSignatureCeph.bucketName }}
   storageClassName: registry-bucket
-  ssl: false
