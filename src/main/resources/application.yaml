@@ -27,6 +27,10 @@ openapi:
       - X-Access-Token
       - X-Digital-Signature
       - X-Digital-Signature-Derived
+      - X-Source-System
+      - X-Source-Application
+      - X-Source-Business-Process
+      - X-Source-Business-Activity
   response:
     codes:
       get-by-id: 200, 401, 403, 500, 501

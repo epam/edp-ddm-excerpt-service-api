@@ -7,6 +7,7 @@ import com.epam.digital.data.platform.excerpt.api.exception.ExcerptNotFoundExcep
 import com.epam.digital.data.platform.excerpt.api.exception.ExcerptProcessingException;
 import com.epam.digital.data.platform.excerpt.api.exception.InvalidKeycloakIdException;
 import com.epam.digital.data.platform.excerpt.api.exception.MandatoryHeaderMissingException;
+import com.epam.digital.data.platform.excerpt.api.model.RequestContext;
 import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
 import com.epam.digital.data.platform.excerpt.api.repository.RecordRepository;
 import com.epam.digital.data.platform.excerpt.api.repository.TemplateRepository;
@@ -59,27 +60,30 @@ public class ExcerptService {
     this.digitalSignatureService = digitalSignatureService;
   }
 
-  public ExcerptEntityId generateExcerpt(ExcerptEventDto excerptEventDto, SecurityContext context) {
+  public ExcerptEntityId generateExcerpt(ExcerptEventDto excerptEventDto,
+      RequestContext requestContext, SecurityContext securityContext) {
     var excerptType = excerptEventDto.getExcerptType();
 
-    validateAndSaveSignatures(excerptEventDto, context);
+    validateAndSaveSignatures(excerptEventDto, securityContext);
     validateTemplate(excerptType);
 
-    var newRecord = recordRepository.save(buildRecord(excerptEventDto, context));
+    var newRecord = recordRepository
+        .save(buildRecord(excerptEventDto, requestContext, securityContext));
     kafkaHelper.send(newRecord, excerptType, excerptEventDto.getExcerptInputData());
 
     return new ExcerptEntityId(newRecord.getId());
   }
 
-  private void validateAndSaveSignatures(ExcerptEventDto excerptEventDto, SecurityContext context) {
-    verifyMandatoryHeaders(context);
+  private void validateAndSaveSignatures(ExcerptEventDto excerptEventDto,
+      SecurityContext securityContext) {
+    verifyMandatoryHeaders(securityContext);
 
     digitalSignatureService
         .checkSignature(excerptEventDto,
-            context.getDigitalSignatureDerived());
+            securityContext.getDigitalSignatureDerived());
 
-    digitalSignatureService.saveSignature(context.getDigitalSignature());
-    digitalSignatureService.saveSignature(context.getDigitalSignatureDerived());
+    digitalSignatureService.saveSignature(securityContext.getDigitalSignature());
+    digitalSignatureService.saveSignature(securityContext.getDigitalSignatureDerived());
   }
 
   private void verifyMandatoryHeaders(SecurityContext context) {
@@ -108,7 +112,11 @@ public class ExcerptService {
 
     validateKeycloakId(excerpt, context);
 
-    log.info("Find Excerpt in Ceph");
+    log.info("Searching Excerpt in Ceph");
+    if (excerpt.getExcerptKey() == null) {
+      log.error("Could not find excerpt with null Ceph key");
+      throw new ExcerptNotFoundException("Could not find excerpt with null Ceph key");
+    }
     cephValue =
         excerptCephService
             .getObject(bucket, excerpt.getExcerptKey())
@@ -136,14 +144,22 @@ public class ExcerptService {
     }
   }
 
-  private ExcerptRecord buildRecord(ExcerptEventDto excerptEventDto, SecurityContext context) {
+  private ExcerptRecord buildRecord(ExcerptEventDto excerptEventDto,
+      RequestContext requestContext, SecurityContext securityContext) {
     var excerptRecord = new ExcerptRecord();
     excerptRecord.setStatus(IN_PROGRESS);
     var now = LocalDateTime.now();
     excerptRecord.setCreatedAt(now);
     excerptRecord.setUpdatedAt(now);
     excerptRecord.setSignatureRequired(excerptEventDto.isRequiresSystemSignature());
-    excerptRecord.setKeycloakId(jwtHelper.getKeycloakId(context.getAccessToken()));
+    excerptRecord.setKeycloakId(jwtHelper.getKeycloakId(securityContext.getAccessToken()));
+
+    excerptRecord.setxDigitalSignature(securityContext.getDigitalSignature());
+    excerptRecord.setxDigitalSignatureDerived(securityContext.getDigitalSignatureDerived());
+    excerptRecord.setxSourceSystem(requestContext.getSourceSystem());
+    excerptRecord.setxSourceApplication(requestContext.getSourceApplication());
+    excerptRecord.setxSourceBusinessProcess(requestContext.getSourceBusinessProcess());
+    excerptRecord.setxSourceBusinessActivity(requestContext.getSourceBusinessActivity());
     return excerptRecord;
   }
 }

@@ -59,7 +59,7 @@ class ExcerptControllerTest {
 
   @Test
   void getGeneratedId() throws Exception {
-    when(excerptService.generateExcerpt(any(), any()))
+    when(excerptService.generateExcerpt(any(), any(), any()))
         .thenReturn(new ExcerptEntityId(ID));
 
     mockMvc.perform(post(BASE_URL)

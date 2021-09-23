@@ -1,5 +1,6 @@
 package com.epam.digital.data.platform.excerpt.api;
 
+import com.epam.digital.data.platform.excerpt.api.annotation.HttpRequestContext;
 import com.epam.digital.data.platform.excerpt.api.annotation.HttpSecurityContext;
 import io.swagger.v3.core.util.PrimitiveType;
 import org.springdoc.core.SpringDocUtils;
@@ -12,7 +13,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 public class ExcerptServiceApiApplication {
 
   static {
-    SpringDocUtils.getConfig().addAnnotationsToIgnore(HttpSecurityContext.class);
+    SpringDocUtils.getConfig()
+        .addAnnotationsToIgnore(HttpSecurityContext.class, HttpRequestContext.class);
     PrimitiveType.enablePartialTime();
   }
 

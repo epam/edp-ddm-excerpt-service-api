@@ -9,6 +9,9 @@ data-platform:
     password: qwerty
   kafka:
     bootstrap: localhost:9092
+    topic-properties:
+      num-partitions: 1
+      replication-factor: 1
 
 server:
   port: 7001

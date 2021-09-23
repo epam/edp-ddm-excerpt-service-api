@@ -12,6 +12,7 @@ import com.epam.digital.data.platform.excerpt.api.exception.ExcerptNotFoundExcep
 import com.epam.digital.data.platform.excerpt.api.exception.ExcerptProcessingException;
 import com.epam.digital.data.platform.excerpt.api.exception.InvalidKeycloakIdException;
 import com.epam.digital.data.platform.excerpt.api.exception.MandatoryHeaderMissingException;
+import com.epam.digital.data.platform.excerpt.api.model.RequestContext;
 import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
 import com.epam.digital.data.platform.excerpt.api.repository.RecordRepository;
 import com.epam.digital.data.platform.excerpt.api.repository.TemplateRepository;
@@ -74,6 +75,7 @@ class ExcerptServiceTest {
     void failWhenCephServiceFails() {
       var record = new ExcerptRecord();
       record.setKeycloakId("stubId");
+      record.setExcerptKey("ceph-key");
 
       when(recordRepository.findById(any())).thenReturn(Optional.of(record));
       when(excerptCephService.getObject(any(), any())).thenReturn(Optional.empty());
@@ -96,6 +98,18 @@ class ExcerptServiceTest {
     }
 
     @Test
+    void failWhenExcerptCephKeyIsNull() {
+      var record = new ExcerptRecord();
+      record.setKeycloakId("stubId");
+
+      when(recordRepository.findById(any())).thenReturn(Optional.of(record));
+      when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
+
+      assertThrows(ExcerptNotFoundException.class,
+          () -> instance.getExcerpt(ID, securityContext()));
+    }
+
+    @Test
     void failWhenNoRecordFound() {
       assertThrows(ExcerptNotFoundException.class, () -> instance.getExcerpt(ID, any()));
     }
@@ -104,6 +118,7 @@ class ExcerptServiceTest {
     void failWhenNotFoundInCeph() {
       var record = new ExcerptRecord();
       record.setKeycloakId("stubId");
+      record.setExcerptKey("ceph-key");
 
       when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
       when(recordRepository.findById(any())).thenReturn(Optional.of(record));
@@ -117,6 +132,7 @@ class ExcerptServiceTest {
     void returnResource() {
       var record = new ExcerptRecord();
       record.setKeycloakId("stubId");
+      record.setExcerptKey("ceph-key");
 
       when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
       when(recordRepository.findById(any())).thenReturn(Optional.of(record));
@@ -156,14 +172,15 @@ class ExcerptServiceTest {
     @Test
     void failWhenTemplateTypeNotFound() {
       assertThrows(ExcerptProcessingException.class,
-          () -> instance.generateExcerpt(buildExcerptEvent(), securityContext()));
+          () -> instance.generateExcerpt(buildExcerptEvent(), requestContext(), securityContext()));
     }
 
     @Test
     void returnEntityId() {
       setupExcerptFound(ID);
 
-      var entityId = instance.generateExcerpt(buildExcerptEvent(), securityContext());
+      var entityId = instance.generateExcerpt(buildExcerptEvent(), requestContext(),
+          securityContext());
 
       verify(recordRepository).save(any());
       verify(kafkaHelper).send(any(), any(), any());
@@ -177,7 +194,7 @@ class ExcerptServiceTest {
 
       String actualMessage = null;
       try {
-        instance.generateExcerpt(buildExcerptEvent(), new SecurityContext());
+        instance.generateExcerpt(buildExcerptEvent(), requestContext(), new SecurityContext());
       } catch (MandatoryHeaderMissingException e) {
         actualMessage = e.getMessage();
       }
@@ -209,6 +226,15 @@ class ExcerptServiceTest {
     context.setAccessToken("stub");
     context.setDigitalSignature("digital_signature");
     context.setDigitalSignatureDerived("digital_signature_derived");
+    return context;
+  }
+
+  private RequestContext requestContext() {
+    var context = new RequestContext();
+    context.setSourceSystem("source_system");
+    context.setSourceApplication("source_application");
+    context.setSourceBusinessActivity("business_activity");
+    context.setSourceBusinessProcess("business_process");
     return context;
   }
 }

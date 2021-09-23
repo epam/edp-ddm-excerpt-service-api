@@ -1,14 +1,15 @@
 package com.epam.digital.data.platform.excerpt.api.controller;
 
+import com.epam.digital.data.platform.excerpt.api.annotation.HttpRequestContext;
 import com.epam.digital.data.platform.excerpt.api.annotation.HttpSecurityContext;
+import com.epam.digital.data.platform.excerpt.api.model.RequestContext;
 import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
 import com.epam.digital.data.platform.excerpt.api.service.ExcerptService;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
+import com.epam.digital.data.platform.excerpt.model.StatusDto;
 import java.util.UUID;
 import javax.validation.Valid;
-
-import com.epam.digital.data.platform.excerpt.model.StatusDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -38,23 +39,27 @@ public class ExcerptController {
   }
 
   @PostMapping
-  public ResponseEntity<ExcerptEntityId> generate(@Valid @RequestBody ExcerptEventDto excerptEventDto,
-      @HttpSecurityContext SecurityContext context) {
+  public ResponseEntity<ExcerptEntityId> generate(
+      @Valid @RequestBody ExcerptEventDto excerptEventDto,
+      @HttpRequestContext RequestContext requestContext,
+      @HttpSecurityContext SecurityContext securityContext) {
     log.info("Excerpt generation called");
-    return ResponseEntity.ok().body(excerptService.generateExcerpt(excerptEventDto, context));
+    return ResponseEntity.ok()
+        .body(excerptService.generateExcerpt(excerptEventDto, requestContext, securityContext));
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Resource> retrieve(@PathVariable("id") UUID id,
-      @HttpSecurityContext SecurityContext context) {
+      @HttpSecurityContext SecurityContext securityContext) {
     log.info("Excerpt retrieval called");
 
-    var excerpt = excerptService.getExcerpt(id, context);
+    var excerpt = excerptService.getExcerpt(id, securityContext);
 
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
         .contentLength(excerpt.getByteArray().length)
-        .header(CONTENT_DISPOSITION_HEADER_NAME, String.format(ATTACHMENT_HEADER_VALUE, id.toString()))
+        .header(CONTENT_DISPOSITION_HEADER_NAME,
+            String.format(ATTACHMENT_HEADER_VALUE, id.toString()))
         .body(excerpt);
   }
 
