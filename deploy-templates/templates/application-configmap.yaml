@@ -27,3 +27,7 @@ data:
     excerpt-signature-ceph:
       http-endpoint: {{ .Values.excerptSignatureCeph.httpEndpoint }}
       bucketName: {{ .Values.excerptSignatureCeph.bucketName }}
+
+    logging:
+      level:
+        org.zalando.logbook: TRACE
