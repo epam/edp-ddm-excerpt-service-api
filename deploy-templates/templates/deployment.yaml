@@ -50,11 +50,11 @@ spec:
             timeoutSeconds: 5
           resources:
             limits:
-              cpu: 500m
-              memory: 1.5Gi
+              cpu: 400m
+              memory: 450Mi
             requests:
-              cpu: 500m
-              memory: 1.5Gi
+              cpu: 200m
+              memory: 450Mi
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           volumeMounts:
@@ -75,6 +75,8 @@ spec:
               name: {{ .Chart.Name }}-excerpt-signature-ceph-bucket-credentials
               readOnly: true
           env:
+            - name: JAVA_OPTS
+              value: {{ .Values.java.javaOpts }}
             - name: DB_URL
               value: {{ .Values.db.url }}
             - name: DB_NAME
