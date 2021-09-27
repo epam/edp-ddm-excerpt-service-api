@@ -83,7 +83,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.db.secret }}
-                  key: excerptSvcUser
+                  key: excerptSvcName
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -114,7 +114,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.db.secret }}
-                  key: excerptSvcUser
+                  key: excerptSvcName
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -135,7 +135,7 @@ spec:
             items:
               - key: excerptSvcPass
                 path: data-platform.datasource.password
-              - key: excerptSvcUser
+              - key: excerptSvcName
                 path: data-platform.datasource.username
         - name: {{ .Chart.Name }}-request-signature-ceph-bucket-credentials
           secret:
