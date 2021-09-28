@@ -5,7 +5,7 @@ version: 1.1.0
 port: 8080
 
 java:
-  javaOpts: -Xms400m -Xmx400m -XX:+UseG1GC
+  javaOpts: -Xms512m -Xmx512m -XX:+UseG1GC
 
 service:
   port: 8080

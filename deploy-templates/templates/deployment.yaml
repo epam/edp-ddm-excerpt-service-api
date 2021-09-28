@@ -51,10 +51,10 @@ spec:
           resources:
             limits:
               cpu: 400m
-              memory: 450Mi
+              memory: 768Mi
             requests:
-              cpu: 200m
-              memory: 450Mi
+              cpu: 400m
+              memory: 768Mi
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           volumeMounts:
