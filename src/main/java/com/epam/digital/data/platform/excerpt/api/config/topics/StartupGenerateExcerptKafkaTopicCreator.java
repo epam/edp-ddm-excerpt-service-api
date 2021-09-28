@@ -15,7 +15,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class StartupGenerateExcerptKafkaTopicCreator {
+
   private static final long DAYS_TO_MS = 24 * 60 * 60 * 1000L;
+  private static final Long TOPIC_CREATION_TIMEOUT = 60L;
 
   private final AdminClient kafkaAdminClient;
   private final KafkaProperties kafkaProperties;
@@ -28,31 +30,33 @@ public class StartupGenerateExcerptKafkaTopicCreator {
 
   @PostConstruct
   public void createKafkaTopic() {
-    long maxElapsedTime = kafkaProperties.getErrorHandler().getMaxElapsedTime();
-    if (!isTopicExist(maxElapsedTime)) {
-      create(maxElapsedTime);
+    if (!isTopicExist()) {
+      create();
     }
   }
 
-  private boolean isTopicExist(long maxElapsedTime) {
+  private boolean isTopicExist() {
     boolean isExist;
     try {
       isExist = kafkaAdminClient.listTopics()
           .names()
-          .get(maxElapsedTime, TimeUnit.MILLISECONDS)
+          .get(TOPIC_CREATION_TIMEOUT, TimeUnit.SECONDS)
           .contains(kafkaProperties.getTopic());
     } catch (Exception e) {
-      throw new CreateKafkaTopicException("Failed to retrieve existing kafka topics: ", e);
+      throw new CreateKafkaTopicException(String.format(
+          "Failed to retrieve existing kafka topics in %d sec", TOPIC_CREATION_TIMEOUT), e);
     }
     return isExist;
   }
 
-  private void create(long maxElapsedTime) {
+  private void create() {
     var createTopicsResult = kafkaAdminClient.createTopics(customize(kafkaProperties.getTopic()));
     try {
-      createTopicsResult.all().get(maxElapsedTime, TimeUnit.MILLISECONDS);
+      createTopicsResult.all().get(TOPIC_CREATION_TIMEOUT, TimeUnit.SECONDS);
     } catch (Exception e) {
-      throw new CreateKafkaTopicException("Failed to create a kafka topic: ", e);
+      throw new CreateKafkaTopicException(
+          String.format("Failed to create the kafka topic '%s' in %d sec", kafkaProperties.getTopic(),
+              TOPIC_CREATION_TIMEOUT), e);
     }
   }
 
