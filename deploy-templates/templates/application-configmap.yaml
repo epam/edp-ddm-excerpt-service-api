@@ -12,8 +12,8 @@ data:
       kafka:
         bootstrap: {{ .Values.kafka.service }}
         topic-properties:
-          num-partitions: 15
-          replication-factor: 3
+          num-partitions: {{ .Values.kafka.numPartitions }}
+          replication-factor: {{ .Values.kafka.replicationFactor }}
 
     dso:
       url: {{ .Values.dso.url }}

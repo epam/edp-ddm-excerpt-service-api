@@ -16,6 +16,8 @@ ingress:
 
 kafka:
   service: kafka-cluster-kafka-bootstrap:9092
+  numPartitions: 15
+  replicationFactor: 3
 
 db:
   url: citus-master
