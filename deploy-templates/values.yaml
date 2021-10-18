@@ -27,15 +27,15 @@ db:
   connectionTimeout: 4000
 
 requestSignatureCeph:
-  httpEndpoint: http://s3.openshift-storage.svc.cluster.local
+  httpEndpoint: ${REQUEST_SIGNATURE_CEPH_BUCKET_HOST}
   bucketName: lowcode-form-data-storage
 
 datafactoryExcerptCeph:
-  httpEndpoint: http://s3.openshift-storage.svc.cluster.local
+  httpEndpoint: ${DATAFACTORY_EXCERPT_CEPH_BUCKET_HOST}
   bucketName: file-excerpt-bucket
 
 excerptSignatureCeph:
-  httpEndpoint: http://s3.openshift-storage.svc.cluster.local
+  httpEndpoint: ${EXCERPT_SIGNATURE_CEPH_BUCKET_HOST}
   bucketName: excerpt-signature-bucket
 
 dso:

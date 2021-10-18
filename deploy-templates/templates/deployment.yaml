@@ -96,16 +96,31 @@ spec:
                 configMapKeyRef:
                   name: {{ .Values.requestSignatureCeph.bucketName }}
                   key: BUCKET_NAME
+            - name: REQUEST_SIGNATURE_CEPH_BUCKET_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.requestSignatureCeph.bucketName }}
+                  key: BUCKET_HOST
             - name: DATAFACTORY_EXCERPT_CEPH_BUCKET_NAME
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Values.datafactoryExcerptCeph.bucketName }}
                   key: BUCKET_NAME
+            - name: DATAFACTORY_EXCERPT_CEPH_BUCKET_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.datafactoryExcerptCeph.bucketName }}
+                  key: BUCKET_HOST
             - name: EXCERPT_SIGNATURE_CEPH_BUCKET_NAME
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Values.excerptSignatureCeph.bucketName }}
                   key: BUCKET_NAME
+            - name: EXCERPT_SIGNATURE_CEPH_BUCKET_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.excerptSignatureCeph.bucketName }}
+                  key: BUCKET_HOST
       initContainers:
         - name: init
           image: {{ .Values.dockerProxyRegistry }}/busybox
