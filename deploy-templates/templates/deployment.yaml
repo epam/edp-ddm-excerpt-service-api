@@ -48,6 +48,7 @@ spec:
             periodSeconds: 20
             successThreshold: 1
             timeoutSeconds: 5
+          {{- if not .Values.global.disableRequestsLimits }}
           resources:
             limits:
               cpu: 400m
@@ -55,6 +56,7 @@ spec:
             requests:
               cpu: 400m
               memory: 800Mi
+          {{- end }}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           volumeMounts:
