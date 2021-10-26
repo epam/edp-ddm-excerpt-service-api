@@ -4,7 +4,7 @@ metadata:
   name: excerpt-service-api-properties
 data:
   config.yaml: |-
-    server.max-http-header-size: 16KB
+    server.max-http-header-size: 32KB
     data-platform:
       datasource:
         url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/{{.Values.db.name}}
