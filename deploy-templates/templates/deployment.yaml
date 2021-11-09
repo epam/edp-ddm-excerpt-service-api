@@ -125,7 +125,7 @@ spec:
                   key: BUCKET_HOST
       initContainers:
         - name: init
-          image: {{ .Values.dockerProxyRegistry }}/busybox
+          image: {{ template "imageRegistry" . -}} busybox
           imagePullPolicy: IfNotPresent
           command: ["sh", "-c", "while ! nc -w 1 {{ .Values.db.url }} {{ .Values.db.port }} </dev/null; do echo waiting for {{ .Values.db.url }}; sleep 10; done;"]
           env:
