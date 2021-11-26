@@ -35,3 +35,5 @@ Application starts by default on port 7001, to get familiar with available endpo
 ###### Additional information
 The `excerpt_template` table might be filled in via `report-publisher`.
 
+### License
+excerpt-service-api is Open Source software released under the Apache 2.0 license.
