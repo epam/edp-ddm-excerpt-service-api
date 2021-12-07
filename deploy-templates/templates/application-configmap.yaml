@@ -13,7 +13,7 @@ data:
         bootstrap: {{ .Values.kafka.service }}
         topic-properties:
           num-partitions: {{ .Values.kafka.numPartitions }}
-          replication-factor: {{ .Values.kafka.replicationFactor }}
+          replication-factor: {{ .Values.global.kafkaOperator.replicationFactor }}
 
     dso:
       url: {{ .Values.dso.url }}
