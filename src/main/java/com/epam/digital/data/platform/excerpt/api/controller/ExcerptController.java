@@ -28,6 +28,7 @@ import java.util.UUID;
 import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -65,18 +66,18 @@ public class ExcerptController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<Resource> retrieve(@PathVariable("id") UUID id,
-      @HttpSecurityContext SecurityContext securityContext) {
+  public ResponseEntity<Resource> retrieve(
+      @PathVariable("id") UUID id, @HttpSecurityContext SecurityContext securityContext) {
     log.info("Excerpt retrieval called");
 
     var excerpt = excerptService.getExcerpt(id, securityContext);
 
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
-        .contentLength(excerpt.getByteArray().length)
-        .header(CONTENT_DISPOSITION_HEADER_NAME,
-            String.format(ATTACHMENT_HEADER_VALUE, id.toString()))
-        .body(excerpt);
+        .contentLength(excerpt.getMetadata().getContentLength())
+        .header(
+            CONTENT_DISPOSITION_HEADER_NAME, String.format(ATTACHMENT_HEADER_VALUE, id.toString()))
+        .body(new InputStreamResource(excerpt.getContent()));
   }
 
   @GetMapping("/{id}/status")

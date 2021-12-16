@@ -91,7 +91,7 @@ class DigitalSignatureServiceTest {
     digitalSignatureService = new DigitalSignatureService(requestCephService, excerptCephService,
         REQUEST_BUCKET, EXCERPT_BUCKET, digitalSealRestClient, OBJECT_MAPPER);
 
-    lenient().when(requestCephService.getContent(REQUEST_BUCKET, X_DIG_SIG_DERIVED))
+    lenient().when(requestCephService.getAsString(REQUEST_BUCKET, X_DIG_SIG_DERIVED))
         .thenReturn(Optional.of(RESPONSE_FROM_CEPH));
   }
 
@@ -128,7 +128,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void cephServiceThrowsExceptionTest() {
-    when(requestCephService.getContent(REQUEST_BUCKET, X_DIG_SIG_DERIVED))
+    when(requestCephService.getAsString(REQUEST_BUCKET, X_DIG_SIG_DERIVED))
         .thenThrow(new CephCommunicationException("", new RuntimeException()));
 
     assertThrows(CephCommunicationException.class,
@@ -137,7 +137,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void shouldThrowExceptionWhenSignatureNotFoundInCheckSignature() {
-    when(requestCephService.getContent(REQUEST_BUCKET, X_DIG_SIG_DERIVED))
+    when(requestCephService.getAsString(REQUEST_BUCKET, X_DIG_SIG_DERIVED))
         .thenReturn(Optional.empty());
 
     assertThrows(DigitalSignatureNotFoundException.class,
@@ -146,7 +146,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void shouldThrowExceptionWhenSignatureNotFoundInSaveSignature() {
-    when(requestCephService.getContent(REQUEST_BUCKET, X_DIG_SIG_DERIVED))
+    when(requestCephService.getAsString(REQUEST_BUCKET, X_DIG_SIG_DERIVED))
         .thenReturn(Optional.empty());
 
     assertThrows(DigitalSignatureNotFoundException.class,
@@ -174,14 +174,14 @@ class DigitalSignatureServiceTest {
 
     String result = digitalSignatureService.saveSignature(X_DIG_SIG_DERIVED);
 
-    verify(requestCephService).getContent(REQUEST_BUCKET, X_DIG_SIG_DERIVED);
-    verify(excerptCephService).putContent(EXCERPT_BUCKET, X_DIG_SIG_DERIVED, RESPONSE_FROM_CEPH);
+    verify(requestCephService).getAsString(REQUEST_BUCKET, X_DIG_SIG_DERIVED);
+    verify(excerptCephService).put(EXCERPT_BUCKET, X_DIG_SIG_DERIVED, RESPONSE_FROM_CEPH);
     assertEquals(RESPONSE_FROM_CEPH, result);
   }
 
   @Test
   void jsonProcessingExceptionChangedToRuntimeException() {
-    when(requestCephService.getContent(any(),any())).thenReturn(Optional.of("{{"));
+    when(requestCephService.getAsString(any(),any())).thenReturn(Optional.of("{{"));
 
     assertThrows(RuntimeException.class,
         () -> digitalSignatureService.checkSignature(DATA_OBJ, X_DIG_SIG_DERIVED));

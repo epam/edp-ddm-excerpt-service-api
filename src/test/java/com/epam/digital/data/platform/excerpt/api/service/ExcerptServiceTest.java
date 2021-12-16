@@ -37,10 +37,13 @@ import com.epam.digital.data.platform.excerpt.dao.ExcerptRecord;
 import com.epam.digital.data.platform.excerpt.dao.ExcerptTemplate;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
 import com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStatus;
-import com.epam.digital.data.platform.integration.ceph.dto.CephObject;
+import com.epam.digital.data.platform.integration.ceph.model.CephObject;
+import com.epam.digital.data.platform.integration.ceph.model.CephObjectMetadata;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +59,6 @@ class ExcerptServiceTest {
   static final UUID ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
 
   static final String BUCKET = "BUCKET";
-  static final byte[] CEPH_CONTENT = "test".getBytes();
 
   ExcerptService instance;
 
@@ -94,7 +96,7 @@ class ExcerptServiceTest {
       record.setExcerptKey("ceph-key");
 
       when(recordRepository.findById(any())).thenReturn(Optional.of(record));
-      when(excerptCephService.getObject(any(), any())).thenReturn(Optional.empty());
+      when(excerptCephService.get(any(), any())).thenReturn(Optional.empty());
       when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
 
       assertThrows(ExcerptNotFoundException.class,
@@ -138,7 +140,7 @@ class ExcerptServiceTest {
 
       when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
       when(recordRepository.findById(any())).thenReturn(Optional.of(record));
-      when(excerptCephService.getObject(any(), any())).thenReturn(Optional.empty());
+      when(excerptCephService.get(any(), any())).thenReturn(Optional.empty());
 
       assertThrows(ExcerptNotFoundException.class,
           () -> instance.getExcerpt(ID, securityContext()));
@@ -152,12 +154,16 @@ class ExcerptServiceTest {
 
       when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
       when(recordRepository.findById(any())).thenReturn(Optional.of(record));
-      when(excerptCephService.getObject(any(), any())).thenReturn(
-          Optional.of(new CephObject(CEPH_CONTENT, Map.of())));
+      var cephServiceResponse = CephObject.builder()
+              .content(new ByteArrayInputStream("test".getBytes()))
+              .metadata(new CephObjectMetadata())
+              .build();
+      when(excerptCephService.get(any(), any())).thenReturn(
+          Optional.of(cephServiceResponse));
 
-      var resource = instance.getExcerpt(ID, securityContext());
+      var actualExcerptResponse = instance.getExcerpt(ID, securityContext());
 
-      assertThat(resource.getByteArray()).isEqualTo(CEPH_CONTENT);
+      assertThat(actualExcerptResponse).isEqualTo(cephServiceResponse);
     }
   }
 

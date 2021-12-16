@@ -30,14 +30,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.epam.digital.data.platform.excerpt.api.service.ExcerptService;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
-import java.util.Base64;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.UUID;
 
 import com.epam.digital.data.platform.excerpt.model.StatusDto;
+import com.epam.digital.data.platform.integration.ceph.model.CephObject;
+import com.epam.digital.data.platform.integration.ceph.model.CephObjectMetadata;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -46,10 +49,12 @@ class ExcerptControllerTest {
 
   static final String BASE_URL = "/excerpts";
   static final UUID ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
-  static final String ENCODED_STRING = Base64.getEncoder().encodeToString("test".getBytes());
 
-  static final String HEADER_NAME = "Content-Disposition";
-  static final String HEADER_VALUE = "attachment; filename=\"123e4567-e89b-12d3-a456-426614174000.pdf\"";
+  static final long EXCERPT_CONTENT_LENGTH = 4;
+
+  static final String CONTENT_DISPOSITION_HEADER_NAME = "Content-Disposition";
+  static final String CONTENT_DISPOSITION_HEADER_VALUE = "attachment; filename=\"123e4567-e89b-12d3-a456-426614174000.pdf\"";
+  static final String CONTENT_LENGTH_HEADER_NAME = "Content-Length";
 
   @Autowired
   MockMvc mockMvc;
@@ -94,14 +99,22 @@ class ExcerptControllerTest {
 
   @Test
   void getExcerpt() throws Exception {
+    InputStream excerptContent = new ByteArrayInputStream("test".getBytes());
+    var excerpt = CephObject.builder()
+            .content(excerptContent)
+            .metadata(CephObjectMetadata.builder()
+                    .contentLength(EXCERPT_CONTENT_LENGTH)
+                    .build())
+            .build();
     when(excerptService.getExcerpt(any(), any()))
-        .thenReturn(new ByteArrayResource(Base64.getDecoder().decode(ENCODED_STRING)));
+        .thenReturn(excerpt);
 
     mockMvc.perform(get(BASE_URL + "/{id}", ID))
         .andExpect(matchAll(
             status().isOk(),
             content().contentType(MediaType.APPLICATION_OCTET_STREAM),
-            header().string(HEADER_NAME, HEADER_VALUE))
+            header().longValue(CONTENT_LENGTH_HEADER_NAME, EXCERPT_CONTENT_LENGTH),
+            header().string(CONTENT_DISPOSITION_HEADER_NAME, CONTENT_DISPOSITION_HEADER_VALUE))
         );
   }
 }

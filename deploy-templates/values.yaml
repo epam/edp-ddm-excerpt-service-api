@@ -30,6 +30,13 @@ db:
   port: 5432
   connectionTimeout: 4000
 
+s3:
+  config:
+    client:
+      protocol: http
+    options:
+      pathStyleAccess: true
+
 requestSignatureCeph:
   httpEndpoint: ${REQUEST_SIGNATURE_CEPH_BUCKET_HOST}
   bucketName: lowcode-form-data-storage

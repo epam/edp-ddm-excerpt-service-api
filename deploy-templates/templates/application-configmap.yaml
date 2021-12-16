@@ -15,6 +15,11 @@ data:
           num-partitions: {{ .Values.kafka.numPartitions }}
           replication-factor: {{ .Values.global.kafkaOperator.replicationFactor }}
 
+    s3:
+      config:
+        client: {{ .Values.s3.config.client | toYaml | nindent 10 }}
+        options: {{ .Values.s3.config.options | toYaml | nindent 10 }}
+
     dso:
       url: {{ .Values.dso.url }}
 

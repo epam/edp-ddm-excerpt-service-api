@@ -38,6 +38,13 @@ excerpt-signature-ceph:
   secret-key: secret-key
   bucket: bucket
 
+s3:
+  config:
+    client:
+      protocol: http
+    options:
+      pathStyleAccess: true
+
 dso:
   url: https://dig-sign-ops-lowcode-dev-dev.apps.cicd2.mdtu-ddm.projects.epam.com
 

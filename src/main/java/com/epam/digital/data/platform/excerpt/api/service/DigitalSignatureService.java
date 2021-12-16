@@ -69,7 +69,7 @@ public class DigitalSignatureService {
     log.info("Retrieve Signature from Ceph");
     String responseFromCeph =
         requestSignatureCephService
-            .getContent(requestSignatureBucket, key)
+            .getAsString(requestSignatureBucket, key)
             .orElseThrow(
                 () -> new DigitalSignatureNotFoundException(
                     "Signature does not exist in ceph bucket. Key: " + key));
@@ -92,11 +92,11 @@ public class DigitalSignatureService {
     log.info("Store Signature to Ceph");
     String value =
         requestSignatureCephService
-            .getContent(requestSignatureBucket, key)
+            .getAsString(requestSignatureBucket, key)
             .orElseThrow(
                 () -> new DigitalSignatureNotFoundException(
                     "Signature does not exist in ceph bucket. Key: " + key));
-    excerptSignatureCephService.putContent(excerptSignatureBucket, key, value);
+    excerptSignatureCephService.put(excerptSignatureBucket, key, value);
     return value;
   }
 

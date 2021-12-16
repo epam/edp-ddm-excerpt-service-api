@@ -33,14 +33,15 @@ import com.epam.digital.data.platform.excerpt.dao.ExcerptRecord;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
 import com.epam.digital.data.platform.excerpt.model.StatusDto;
+import com.epam.digital.data.platform.integration.ceph.model.CephObject;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -121,8 +122,7 @@ public class ExcerptService {
             () -> new ExcerptProcessingException(FAILED, "Template not found: " + excerptType));
   }
 
-  public ByteArrayResource getExcerpt(UUID id, SecurityContext context) {
-    byte[] cephValue;
+  public CephObject getExcerpt(UUID id, SecurityContext context) {
     var excerpt = recordRepository.findById(id)
         .orElseThrow(() -> new ExcerptNotFoundException("Record not found in DB: " + id));
 
@@ -133,16 +133,13 @@ public class ExcerptService {
       log.error("Could not find excerpt with null Ceph key");
       throw new ExcerptNotFoundException("Could not find excerpt with null Ceph key");
     }
-    cephValue =
+    return
         excerptCephService
-            .getObject(bucket, excerpt.getExcerptKey())
+            .get(bucket, excerpt.getExcerptKey())
             .orElseThrow(
                 () ->
                     new ExcerptNotFoundException(
-                        "Excerpt not found in Ceph: " + excerpt.getExcerptKey()))
-            .getContent();
-
-    return new ByteArrayResource(cephValue);
+                        "Excerpt not found in Ceph: " + excerpt.getExcerptKey()));
   }
 
   public StatusDto getStatus(UUID id) {
