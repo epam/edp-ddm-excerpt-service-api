@@ -3,8 +3,6 @@ spring:
     name: excerpt-service-api
   mvc:
     throw-exception-if-no-handler-found: true
-  resources:
-    add-mappings: false
   zipkin:
     baseUrl: http://zipkin.istio-system.svc:9411
     sender:
@@ -16,6 +14,9 @@ spring:
       correlation-enabled: true
       remote-fields: x-request-id, x-access-token
       correlation-fields: x-request-id
+  web:
+    resources:
+      add-mappings: false
 
 springdoc:
   swagger-ui:

@@ -25,7 +25,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <java.version>11</java.version>
-    <spring.boot.version>2.3.5.RELEASE</spring.boot.version>
+    <spring.boot.version>2.6.1</spring.boot.version>
+    <spring.cloud.version>2021.0.0</spring.cloud.version>
     <sonar.coverage.exclusions>
       <!-- do not calc coverage for the classes without BL: -->
       **/model/**/*,
@@ -48,7 +49,7 @@
       <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-dependencies</artifactId>
-        <version>Hoxton.SR8</version>
+        <version>${spring.cloud.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -143,7 +144,13 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-kubernetes-config</artifactId>
+      <artifactId>spring-cloud-starter-kubernetes-client-config</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-logging</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -249,4 +256,5 @@
       </plugin>
     </plugins>
   </build>
+  
 </project>
