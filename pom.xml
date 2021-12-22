@@ -13,7 +13,6 @@
 
   <properties>
     <model.version>1.5.0-SNAPSHOT</model.version>
-    <ddm.starter.rest.api.version>1.5.0-SNAPSHOT</ddm.starter.rest.api.version>
     <ddm.starter.logger.version>1.5.1-SNAPSHOT</ddm.starter.logger.version>
     <ddm.starter.swagger.version>1.5.0-SNAPSHOT</ddm.starter.swagger.version>
     <ddm.starter.actuator.version>1.5.0-SNAPSHOT</ddm.starter.actuator.version>
