@@ -16,12 +16,7 @@
 
 package com.epam.digital.data.platform.excerpt.api.service;
 
-import static com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStatus.FAILED;
-import static com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStatus.IN_PROGRESS;
-
-import com.epam.digital.data.platform.excerpt.api.exception.ExcerptNotFoundException;
 import com.epam.digital.data.platform.excerpt.api.exception.ExcerptProcessingException;
-import com.epam.digital.data.platform.excerpt.api.exception.InvalidKeycloakIdException;
 import com.epam.digital.data.platform.excerpt.api.exception.MandatoryHeaderMissingException;
 import com.epam.digital.data.platform.excerpt.api.model.RequestContext;
 import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
@@ -32,72 +27,65 @@ import com.epam.digital.data.platform.excerpt.api.util.JwtHelper;
 import com.epam.digital.data.platform.excerpt.dao.ExcerptRecord;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
-import com.epam.digital.data.platform.excerpt.model.StatusDto;
-import com.epam.digital.data.platform.integration.ceph.model.CephObject;
-import com.epam.digital.data.platform.integration.ceph.service.CephService;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-@Service
-public class ExcerptService {
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 
-  private final Logger log = LoggerFactory.getLogger(ExcerptService.class);
+import static com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStatus.FAILED;
+import static com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStatus.IN_PROGRESS;
+
+@Service
+public class ExcerptGenerationService {
 
   private final RecordRepository recordRepository;
   private final TemplateRepository templateRepository;
 
   private final KafkaHelper kafkaHelper;
   private final JwtHelper jwtHelper;
-
-  private final CephService excerptCephService;
-  private final String bucket;
-
   private final DigitalSignatureService digitalSignatureService;
 
-  public ExcerptService(
+  private final boolean isDigitalSignatureEnabled;
+
+  public ExcerptGenerationService(
       RecordRepository recordRepository,
       TemplateRepository templateRepository,
       KafkaHelper kafkaHelper,
       JwtHelper jwtHelper,
-      CephService excerptCephService,
-      @Value("${datafactory-excerpt-ceph.bucket}") String bucket,
-      DigitalSignatureService digitalSignatureService) {
+      DigitalSignatureService digitalSignatureService,
+      @Value("${dataplatform.signature.enabled}") boolean isDigitalSignatureEnabled) {
     this.recordRepository = recordRepository;
     this.templateRepository = templateRepository;
     this.kafkaHelper = kafkaHelper;
     this.jwtHelper = jwtHelper;
-    this.excerptCephService = excerptCephService;
-    this.bucket = bucket;
     this.digitalSignatureService = digitalSignatureService;
+    this.isDigitalSignatureEnabled = isDigitalSignatureEnabled;
   }
 
   public ExcerptEntityId generateExcerpt(ExcerptEventDto excerptEventDto,
-      RequestContext requestContext, SecurityContext securityContext) {
+                                         RequestContext requestContext,
+                                         SecurityContext securityContext) {
     var excerptType = excerptEventDto.getExcerptType();
 
     validateAndSaveSignatures(excerptEventDto, securityContext);
     validateTemplate(excerptType);
 
-    var newRecord = recordRepository
-        .save(buildRecord(excerptEventDto, requestContext, securityContext));
+    var newRecord = recordRepository.save(buildRecord(excerptEventDto, requestContext, securityContext));
     kafkaHelper.send(newRecord, excerptType, excerptEventDto.getExcerptInputData());
 
     return new ExcerptEntityId(newRecord.getId());
   }
 
-  private void validateAndSaveSignatures(ExcerptEventDto excerptEventDto,
-      SecurityContext securityContext) {
+  private void validateAndSaveSignatures(
+      ExcerptEventDto excerptEventDto, SecurityContext securityContext) {
+    if (!isDigitalSignatureEnabled) {
+      return;
+    }
     verifyMandatoryHeaders(securityContext);
 
-    digitalSignatureService
-        .checkSignature(excerptEventDto,
-            securityContext.getDigitalSignatureDerived());
+    digitalSignatureService.checkSignature(
+        excerptEventDto, securityContext.getDigitalSignatureDerived());
 
     digitalSignatureService.saveSignature(securityContext.getDigitalSignature());
     digitalSignatureService.saveSignature(securityContext.getDigitalSignatureDerived());
@@ -117,48 +105,14 @@ public class ExcerptService {
   }
 
   private void validateTemplate(String excerptType) {
-    templateRepository.findFirstByTemplateName(excerptType)
+    templateRepository
+        .findFirstByTemplateName(excerptType)
         .orElseThrow(
             () -> new ExcerptProcessingException(FAILED, "Template not found: " + excerptType));
   }
 
-  public CephObject getExcerpt(UUID id, SecurityContext context) {
-    var excerpt = recordRepository.findById(id)
-        .orElseThrow(() -> new ExcerptNotFoundException("Record not found in DB: " + id));
-
-    validateKeycloakId(excerpt, context);
-
-    log.info("Searching Excerpt in Ceph");
-    if (excerpt.getExcerptKey() == null) {
-      log.error("Could not find excerpt with null Ceph key");
-      throw new ExcerptNotFoundException("Could not find excerpt with null Ceph key");
-    }
-    return
-        excerptCephService
-            .get(bucket, excerpt.getExcerptKey())
-            .orElseThrow(
-                () ->
-                    new ExcerptNotFoundException(
-                        "Excerpt not found in Ceph: " + excerpt.getExcerptKey()));
-  }
-
-  public StatusDto getStatus(UUID id) {
-    var excerptRecord = recordRepository.findById(id)
-        .orElseThrow(() -> new ExcerptNotFoundException("Record " + id + " not found"));
-
-    return new StatusDto(excerptRecord.getStatus(), excerptRecord.getStatusDetails());
-  }
-
-  private void validateKeycloakId(ExcerptRecord excerpt, SecurityContext context) {
-    var requestKeycloakId = jwtHelper.getKeycloakId(context.getAccessToken());
-
-    if (!excerpt.getKeycloakId().equals(requestKeycloakId)) {
-      throw new InvalidKeycloakIdException("KeycloakId does not match one stored in database");
-    }
-  }
-
   private ExcerptRecord buildRecord(ExcerptEventDto excerptEventDto,
-      RequestContext requestContext, SecurityContext securityContext) {
+                                    RequestContext requestContext, SecurityContext securityContext) {
     var excerptRecord = new ExcerptRecord();
     excerptRecord.setStatus(IN_PROGRESS);
     var now = LocalDateTime.now();

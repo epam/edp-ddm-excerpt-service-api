@@ -20,7 +20,9 @@ import com.epam.digital.data.platform.excerpt.api.annotation.HttpRequestContext;
 import com.epam.digital.data.platform.excerpt.api.annotation.HttpSecurityContext;
 import com.epam.digital.data.platform.excerpt.api.model.RequestContext;
 import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
-import com.epam.digital.data.platform.excerpt.api.service.ExcerptService;
+import com.epam.digital.data.platform.excerpt.api.service.ExcerptGenerationService;
+import com.epam.digital.data.platform.excerpt.api.service.ExcerptRetrievingService;
+import com.epam.digital.data.platform.excerpt.api.service.ExcerptStatusCheckService;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
 import com.epam.digital.data.platform.excerpt.model.StatusDto;
@@ -48,11 +50,17 @@ public class ExcerptController {
 
   private final Logger log = LoggerFactory.getLogger(ExcerptController.class);
 
-  private final ExcerptService excerptService;
+  private final ExcerptGenerationService excerptGenerationService;
+  private final ExcerptRetrievingService excerptRetrievingService;
+  private final ExcerptStatusCheckService excerptStatusCheckService;
 
   public ExcerptController(
-      ExcerptService excerptService) {
-    this.excerptService = excerptService;
+      ExcerptGenerationService excerptGenerationService,
+      ExcerptRetrievingService excerptRetrievingService,
+      ExcerptStatusCheckService excerptStatusCheckService) {
+    this.excerptGenerationService = excerptGenerationService;
+    this.excerptRetrievingService = excerptRetrievingService;
+    this.excerptStatusCheckService = excerptStatusCheckService;
   }
 
   @PostMapping
@@ -62,7 +70,7 @@ public class ExcerptController {
       @HttpSecurityContext SecurityContext securityContext) {
     log.info("Excerpt generation called");
     return ResponseEntity.ok()
-        .body(excerptService.generateExcerpt(excerptEventDto, requestContext, securityContext));
+        .body(excerptGenerationService.generateExcerpt(excerptEventDto, requestContext, securityContext));
   }
 
   @GetMapping("/{id}")
@@ -70,7 +78,7 @@ public class ExcerptController {
       @PathVariable("id") UUID id, @HttpSecurityContext SecurityContext securityContext) {
     log.info("Excerpt retrieval called");
 
-    var excerpt = excerptService.getExcerpt(id, securityContext);
+    var excerpt = excerptRetrievingService.getExcerpt(id, securityContext);
 
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -84,7 +92,7 @@ public class ExcerptController {
   public ResponseEntity<StatusDto> status(@PathVariable("id") UUID id) {
     log.info("Excerpt status retrieval called");
 
-    var status = excerptService.getStatus(id);
+    var status = excerptStatusCheckService.getStatus(id);
     return ResponseEntity.ok().body(status);
   }
 }

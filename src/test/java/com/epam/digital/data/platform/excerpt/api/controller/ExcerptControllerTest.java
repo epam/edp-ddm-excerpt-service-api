@@ -28,7 +28,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.excerpt.api.service.ExcerptService;
+import com.epam.digital.data.platform.excerpt.api.service.ExcerptGenerationService;
+import com.epam.digital.data.platform.excerpt.api.service.ExcerptRetrievingService;
+import com.epam.digital.data.platform.excerpt.api.service.ExcerptStatusCheckService;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 
 import java.io.ByteArrayInputStream;
@@ -60,13 +62,17 @@ class ExcerptControllerTest {
   MockMvc mockMvc;
 
   @MockBean
-  ExcerptService excerptService;
+  ExcerptGenerationService excerptGenerationService;
+  @MockBean
+  ExcerptRetrievingService excerptRetrievingService;
+  @MockBean
+  ExcerptStatusCheckService excerptStatusCheckService;
 
   @Test
   void getStatus() throws Exception {
     var expectedStatus = FAILED;
     var expectedDetails = "some details";
-    when(excerptService.getStatus(any()))
+    when(excerptStatusCheckService.getStatus(any()))
         .thenReturn(new StatusDto(expectedStatus, expectedDetails));
 
     mockMvc.perform(get(BASE_URL + "/{id}/status", ID))
@@ -80,7 +86,7 @@ class ExcerptControllerTest {
 
   @Test
   void getGeneratedId() throws Exception {
-    when(excerptService.generateExcerpt(any(), any(), any()))
+    when(excerptGenerationService.generateExcerpt(any(), any(), any()))
         .thenReturn(new ExcerptEntityId(ID));
 
     mockMvc.perform(post(BASE_URL)
@@ -106,7 +112,7 @@ class ExcerptControllerTest {
                     .contentLength(EXCERPT_CONTENT_LENGTH)
                     .build())
             .build();
-    when(excerptService.getExcerpt(any(), any()))
+    when(excerptRetrievingService.getExcerpt(any(), any()))
         .thenReturn(excerpt);
 
     mockMvc.perform(get(BASE_URL + "/{id}", ID))
