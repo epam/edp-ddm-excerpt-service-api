@@ -19,8 +19,9 @@ package com.epam.digital.data.platform.excerpt.api.config;
 import com.epam.digital.data.platform.excerpt.api.config.properties.KafkaProperties;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
+
 import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
@@ -67,9 +68,13 @@ public class KafkaConfiguration {
   }
 
   @Bean
-  public AdminClient kafkaAdminClient() {
+  public Supplier<AdminClient> adminClientFactory() {
+    return this::kafkaAdminClient;
+  }
+
+  private AdminClient kafkaAdminClient() {
     Map<String, Object> props = new HashMap<>();
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrap());
-    return KafkaAdminClient.create(props);
+    return AdminClient.create(props);
   }
 }

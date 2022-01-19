@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import javax.annotation.PostConstruct;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -35,26 +36,28 @@ public class StartupGenerateExcerptKafkaTopicCreator {
   private static final long DAYS_TO_MS = 24 * 60 * 60 * 1000L;
   private static final Long TOPIC_CREATION_TIMEOUT = 60L;
 
-  private final AdminClient kafkaAdminClient;
+  private final Supplier<AdminClient> adminClientFactory;
   private final KafkaProperties kafkaProperties;
 
-  public StartupGenerateExcerptKafkaTopicCreator(AdminClient kafkaAdminClient,
+  public StartupGenerateExcerptKafkaTopicCreator(Supplier<AdminClient> adminClientFactory,
       KafkaProperties kafkaProperties) {
-    this.kafkaAdminClient = kafkaAdminClient;
+    this.adminClientFactory = adminClientFactory;
     this.kafkaProperties = kafkaProperties;
   }
 
   @PostConstruct
   public void createKafkaTopic() {
-    if (!isTopicExist()) {
-      create();
+    try (var adminClient = adminClientFactory.get()) {
+      if (!isTopicExist(adminClient)) {
+        create(adminClient);
+      }
     }
   }
 
-  private boolean isTopicExist() {
+  private boolean isTopicExist(AdminClient adminClient) {
     boolean isExist;
     try {
-      isExist = kafkaAdminClient.listTopics()
+      isExist = adminClient.listTopics()
           .names()
           .get(TOPIC_CREATION_TIMEOUT, TimeUnit.SECONDS)
           .contains(kafkaProperties.getTopic());
@@ -65,8 +68,8 @@ public class StartupGenerateExcerptKafkaTopicCreator {
     return isExist;
   }
 
-  private void create() {
-    var createTopicsResult = kafkaAdminClient.createTopics(customize(kafkaProperties.getTopic()));
+  private void create(AdminClient adminClient) {
+    var createTopicsResult = adminClient.createTopics(customize(kafkaProperties.getTopic()));
     try {
       createTopicsResult.all().get(TOPIC_CREATION_TIMEOUT, TimeUnit.SECONDS);
     } catch (Exception e) {

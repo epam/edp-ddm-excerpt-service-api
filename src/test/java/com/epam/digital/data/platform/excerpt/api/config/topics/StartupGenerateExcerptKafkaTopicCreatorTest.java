@@ -76,7 +76,7 @@ class StartupGenerateExcerptKafkaTopicCreatorTest {
 
   @BeforeEach
   void setup() {
-    instance = new StartupGenerateExcerptKafkaTopicCreator(adminClient, mockKafkaProperties());
+    instance = new StartupGenerateExcerptKafkaTopicCreator(() -> adminClient, mockKafkaProperties());
     existedTopics = new HashSet<>();
     existedTopics.add("some-topic");
     existedTopics.add("another-topic");
@@ -98,7 +98,7 @@ class StartupGenerateExcerptKafkaTopicCreatorTest {
     var newTopic = resultSet.stream().findFirst().get();
 
     assertThat(newTopic.name()).isEqualTo(GENERATE_EXCERPT_TOPIC);
-    assertThat(newTopic.configs().size()).isEqualTo(1);
+    assertThat(newTopic.configs()).hasSize(1);
     assertThat(newTopic.numPartitions()).isEqualTo(NUM_PARTITIONS);
     assertThat(newTopic.replicationFactor()).isEqualTo(REPLICATION_FACTOR);
     assertThat(Long.valueOf(newTopic.configs().get(RETENTION_MS_CONFIG)))
