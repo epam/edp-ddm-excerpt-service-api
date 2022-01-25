@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.excerpt.api.controller;
 
 import com.epam.digital.data.platform.excerpt.api.annotation.HttpRequestContext;
 import com.epam.digital.data.platform.excerpt.api.annotation.HttpSecurityContext;
+import com.epam.digital.data.platform.excerpt.api.audit.AuditableController;
 import com.epam.digital.data.platform.excerpt.api.model.RequestContext;
 import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
 import com.epam.digital.data.platform.excerpt.api.service.ExcerptGenerationService;
@@ -63,6 +64,7 @@ public class ExcerptController {
     this.excerptStatusCheckService = excerptStatusCheckService;
   }
 
+  @AuditableController(action = "GENERATE EXCERPT CALL")
   @PostMapping
   public ResponseEntity<ExcerptEntityId> generate(
       @Valid @RequestBody ExcerptEventDto excerptEventDto,
@@ -73,6 +75,7 @@ public class ExcerptController {
         .body(excerptGenerationService.generateExcerpt(excerptEventDto, requestContext, securityContext));
   }
 
+  @AuditableController(action = "RETRIEVE EXCERPT CALL")
   @GetMapping("/{id}")
   public ResponseEntity<Resource> retrieve(
       @PathVariable("id") UUID id, @HttpSecurityContext SecurityContext securityContext) {

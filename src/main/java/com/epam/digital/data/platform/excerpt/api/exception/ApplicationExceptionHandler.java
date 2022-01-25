@@ -21,6 +21,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
+import com.epam.digital.data.platform.excerpt.api.audit.AuditableException;
 import com.epam.digital.data.platform.excerpt.api.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.excerpt.api.model.FieldsValidationErrorDetails;
 import com.epam.digital.data.platform.excerpt.model.StatusDto;
@@ -39,6 +40,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -63,7 +65,9 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String CLIENT_ERROR = "CLIENT_ERROR";
   private static final String VALIDATION_ERROR = "VALIDATION_ERROR";
   private static final String METHOD_ARGUMENT_TYPE_MISMATCH = "METHOD_ARGUMENT_TYPE_MISMATCH";
+  private static final String AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED";
 
+  @AuditableException
   @ExceptionHandler(CephCommunicationException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleCephCommunicationException(
       Exception exception) {
@@ -72,6 +76,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(THIRD_PARTY_SERVICE_UNAVAILABLE));
   }
 
+  @AuditableException
   @ExceptionHandler(MisconfigurationException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleMisconfigurationException(
       Exception exception) {
@@ -80,6 +85,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(INTERNAL_CONTRACT_VIOLATION));
   }
 
+  @AuditableException
   @ExceptionHandler(KepServiceInternalServerErrorException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleInternalServerErrorException(
       Exception exception) {
@@ -88,6 +94,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(THIRD_PARTY_SERVICE_UNAVAILABLE));
   }
 
+  @AuditableException
   @ExceptionHandler(KepServiceBadRequestException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleBadRequestException(
       Exception exception) {
@@ -97,6 +104,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(INTERNAL_CONTRACT_VIOLATION));
   }
 
+  @AuditableException
   @ExceptionHandler(InvalidSignatureException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleSignatureValidationException(
       InvalidSignatureException exception) {
@@ -105,6 +113,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(SIGNATURE_VIOLATION));
   }
 
+  @AuditableException
   @ExceptionHandler(DigitalSignatureNotFoundException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleCephNoSuchObjectException(
       DigitalSignatureNotFoundException exception) {
@@ -114,6 +123,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     return ResponseEntity.status(BAD_REQUEST).body(responseBody);
   }
 
+  @AuditableException
   @ExceptionHandler(MandatoryHeaderMissingException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleMandatoryHeaderMissingException(
       Exception exception) {
@@ -122,6 +132,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(HEADERS_ARE_MISSING));
   }
 
+  @AuditableException
   @ExceptionHandler(ExcerptProcessingException.class)
   public ResponseEntity<StatusDto> handleTemplateNotFoundException(
       ExcerptProcessingException exception) {
@@ -130,6 +141,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(new StatusDto(exception.getStatus(), exception.getMessage()));
   }
 
+  @AuditableException
   @ExceptionHandler(ExcerptNotFoundException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleRecordNotFoundException(
       ExcerptNotFoundException exception) {
@@ -138,6 +150,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(NOT_FOUND));
   }
 
+  @AuditableException
   @ExceptionHandler(InvalidKeycloakIdException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleInvalidKeycloakIdException(
       InvalidKeycloakIdException exception) {
@@ -146,6 +159,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(INVALID_KEYCLOAK_ID));
   }
 
+  @AuditableException
   @ExceptionHandler(Exception.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleException(Exception exception) {
     log.error("Runtime error occurred", exception);
@@ -153,6 +167,16 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(RUNTIME_ERROR));
   }
 
+  @AuditableException(userInfoEnabled = false)
+  @ExceptionHandler(AuthenticationException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleAuthenticationException(
+          AuthenticationException exception) {
+    log.error("Authentication failure", exception);
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(newDetailedResponse(AUTHENTICATION_FAILED));
+  }
+
+  @AuditableException
   @ExceptionHandler(AccessDeniedException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleAccessDeniedException(
       AccessDeniedException exception) {
@@ -161,6 +185,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(FORBIDDEN_OPERATION));
   }
 
+  @AuditableException
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleMethodArgumentTypeMismatchException(
       Exception exception) {
@@ -169,6 +194,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(METHOD_ARGUMENT_TYPE_MISMATCH));
   }
 
+  @AuditableException
   @Override
   protected ResponseEntity<Object> handleMethodArgumentNotValid(
       MethodArgumentNotValidException exception, HttpHeaders headers, HttpStatus status,
@@ -187,6 +213,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(invalidFieldsResponse);
   }
 
+  @AuditableException
   @Override
   protected ResponseEntity<Object> handleHttpMessageNotReadable(
       HttpMessageNotReadableException exception, HttpHeaders headers, HttpStatus status,

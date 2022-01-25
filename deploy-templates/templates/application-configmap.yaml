@@ -34,3 +34,9 @@ data:
     excerpt-signature-ceph:
       http-endpoint: {{ .Values.excerptSignatureCeph.httpEndpoint }}
       bucketName: {{ .Values.excerptSignatureCeph.bucketName }}
+
+    audit:
+      kafka:
+        bootstrap: {{ .Values.kafka.service }}
+        topic: {{ .Values.audit.kafka.topic }}
+        schema-registry-url: {{ .Values.audit.kafka.schemaRegistryUrl }}

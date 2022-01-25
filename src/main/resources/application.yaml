@@ -12,8 +12,10 @@ spring:
       enabled: true
     baggage:
       correlation-enabled: true
-      remote-fields: x-request-id, x-access-token
-      correlation-fields: x-request-id
+      remote-fields: x-request-id, x-access-token, x-source-system, x-source-application,
+        x-source-business-process, x-source-business-process
+      correlation-fields: x-request-id, x-access-token, x-source-system, x-source-application,
+        x-source-business-process, x-source-business-process
   web:
     resources:
       add-mappings: false

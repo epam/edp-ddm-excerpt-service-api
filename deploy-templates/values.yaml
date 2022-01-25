@@ -73,3 +73,8 @@ keycloak:
     citizen: citizen-portal
     admin: admin
   certificatesEndpoint: /protocol/openid-connect/certs
+
+audit:
+  kafka:
+    topic: audit-events
+    schemaRegistryUrl: http://kafka-schema-registry:8081
