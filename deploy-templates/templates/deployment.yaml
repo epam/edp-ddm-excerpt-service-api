@@ -123,6 +123,21 @@ spec:
                 configMapKeyRef:
                   name: {{ .Values.excerptSignatureCeph.bucketName }}
                   key: BUCKET_HOST
+            - name: KAFKA_USER_KEYSTORE_CERTIFICATE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.kafka.user }}
+                  key: user.crt
+            - name: KAFKA_USER_KEYSTORE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.kafka.user }}
+                  key: user.key
+            - name: KAFKA_CLUSTER_TRUSTSTORE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.kafka.clusterName }}-cluster-ca-cert
+                  key: ca.crt
       initContainers:
         - name: init
           image: {{ template "imageRegistry" . -}} busybox

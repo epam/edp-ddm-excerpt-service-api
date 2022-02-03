@@ -12,6 +12,8 @@ data-platform:
     topic-properties:
       num-partitions: 1
       replication-factor: 1
+    ssl:
+      enabled: false
   signature:
     enabled: false
 
@@ -64,3 +66,5 @@ audit:
     bootstrap: localhost:9092
     topic: audit-events
     schema-registry-url: http://localhost:8081
+    ssl:
+      enabled: false

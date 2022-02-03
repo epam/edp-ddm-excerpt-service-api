@@ -30,6 +30,7 @@ public class KafkaProperties {
   private TopicProperties topicProperties;
   private ErrorHandler errorHandler = new ErrorHandler();
   private String topic;
+  private SslProperties ssl;
 
   public List<String> getTrustedPackages() {
     return trustedPackages;
@@ -78,6 +79,14 @@ public class KafkaProperties {
   public void setTopicProperties(
       TopicProperties topicProperties) {
     this.topicProperties = topicProperties;
+  }
+
+  public SslProperties getSsl() {
+    return ssl;
+  }
+
+  public void setSsl(SslProperties ssl) {
+    this.ssl = ssl;
   }
 
   public static class ErrorHandler {
@@ -139,6 +148,46 @@ public class KafkaProperties {
 
     public void setRetentionPolicyInDays(Integer retentionPolicyInDays) {
       this.retentionPolicyInDays = retentionPolicyInDays;
+    }
+  }
+
+  public static class SslProperties {
+
+    private boolean enabled;
+    private String keystoreKey;
+    private String keystoreCertificate;
+    private String truststoreCertificate;
+
+    public boolean isEnabled() {
+      return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+      this.enabled = enabled;
+    }
+
+    public String getKeystoreKey() {
+      return keystoreKey;
+    }
+
+    public void setKeystoreKey(String keystoreKey) {
+      this.keystoreKey = keystoreKey;
+    }
+
+    public String getKeystoreCertificate() {
+      return keystoreCertificate;
+    }
+
+    public void setKeystoreCertificate(String keystoreCertificate) {
+      this.keystoreCertificate = keystoreCertificate;
+    }
+
+    public String getTruststoreCertificate() {
+      return truststoreCertificate;
+    }
+
+    public void setTruststoreCertificate(String truststoreCertificate) {
+      this.truststoreCertificate = truststoreCertificate;
     }
   }
 }
