@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.excerpt.api.config.topics;
 
+import static com.epam.digital.data.platform.starter.actuator.readinessprobe.KafkaConstants.KAFKA_HEALTH_TOPIC;
 import static org.apache.kafka.common.config.TopicConfig.RETENTION_MS_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,6 +32,8 @@ import com.epam.digital.data.platform.excerpt.api.config.properties.KafkaPropert
 import com.epam.digital.data.platform.excerpt.api.config.properties.KafkaProperties.ErrorHandler;
 import com.epam.digital.data.platform.excerpt.api.config.properties.KafkaProperties.TopicProperties;
 import com.epam.digital.data.platform.excerpt.api.exception.CreateKafkaTopicException;
+
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +42,7 @@ import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.KafkaFuture;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -85,7 +89,8 @@ class StartupGenerateExcerptKafkaTopicCreatorTest {
   @Test
   void shouldCreateTopic() throws Exception {
     customizeAdminClientMock(existedTopics);
-    when(createTopicsResult.all()).thenReturn(createTopicsFuture);
+    when(createTopicsResult.values())
+            .thenReturn(Collections.singletonMap(GENERATE_EXCERPT_TOPIC, createTopicsFuture));
     when(adminClient.createTopics(anyCollection())).thenReturn(createTopicsResult);
 
     instance.createKafkaTopic();
@@ -124,11 +129,28 @@ class StartupGenerateExcerptKafkaTopicCreatorTest {
   }
 
   @Test
-  void shouldThrowExceptionWhenTimeExceededLimit() throws Exception {
+  void shouldThrowExceptionWhenNonSuccessTopicCreation() throws Exception {
     customizeAdminClientMock(existedTopics);
+    when(adminClient.createTopics(anyCollection())).thenReturn(createTopicsResult);
+    when(createTopicsResult.values())
+            .thenReturn(Collections.singletonMap(KAFKA_HEALTH_TOPIC, createTopicsFuture));
+    when(createTopicsFuture.get(anyLong(), any(TimeUnit.class))).thenThrow(new RuntimeException());
+
 
     assertThatThrownBy(() -> instance.createKafkaTopic())
         .isInstanceOf(CreateKafkaTopicException.class);
+  }
+
+  @Test
+  void shouldNotFailIfTopicExistsException() throws Exception {
+    customizeAdminClientMock(existedTopics);
+    when(createTopicsResult.values())
+            .thenReturn(Collections.singletonMap(KAFKA_HEALTH_TOPIC, createTopicsFuture));
+    when(adminClient.createTopics(anyCollection())).thenReturn(createTopicsResult);
+    when(createTopicsFuture.get(anyLong(), any(TimeUnit.class)))
+            .thenThrow(new RuntimeException(new TopicExistsException("")));
+
+    instance.createKafkaTopic();
   }
 
   private void customizeAdminClientMock(Set<String> topics) throws Exception {
