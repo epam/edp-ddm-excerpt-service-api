@@ -24,8 +24,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.epam.digital.data.platform.dso.api.dto.ErrorDto;
-import com.epam.digital.data.platform.dso.api.dto.VerifyRequestDto;
-import com.epam.digital.data.platform.dso.api.dto.VerifyResponseDto;
+import com.epam.digital.data.platform.dso.api.dto.VerificationRequestDto;
+import com.epam.digital.data.platform.dso.api.dto.VerificationResponseDto;
 import com.epam.digital.data.platform.dso.client.DigitalSealRestClient;
 import com.epam.digital.data.platform.dso.client.exception.BadRequestException;
 import com.epam.digital.data.platform.dso.client.exception.InternalServerErrorException;
@@ -77,7 +77,7 @@ class DigitalSignatureServiceTest {
   private DigitalSealRestClient digitalSealRestClient;
 
   @Captor
-  private ArgumentCaptor<VerifyRequestDto> requestCaptor;
+  private ArgumentCaptor<VerificationRequestDto> requestCaptor;
 
   private DigitalSignatureService digitalSignatureService;
 
@@ -97,20 +97,20 @@ class DigitalSignatureServiceTest {
 
   @Test
   void validSignatureTest() {
-    when(digitalSealRestClient.verify(any())).thenReturn(new VerifyResponseDto(true, null));
+    when(digitalSealRestClient.verify(any())).thenReturn(new VerificationResponseDto(true, null));
 
     digitalSignatureService.checkSignature(DATA_OBJ, X_DIG_SIG_DERIVED);
 
     verify(digitalSealRestClient).verify(requestCaptor.capture());
 
-    assertEquals(SIGNATURE, requestCaptor.getValue().signature());
-    assertEquals(DATA_STR, requestCaptor.getValue().data());
+    assertEquals(SIGNATURE, requestCaptor.getValue().getSignature());
+    assertEquals(DATA_STR, requestCaptor.getValue().getData());
   }
 
   @Test
   void shouldThrowInvalidSignatureException() {
     when(digitalSealRestClient.verify(any())).
-        thenReturn(new VerifyResponseDto(false, errorDto));
+        thenReturn(new VerificationResponseDto(false, errorDto));
 
     String exceptionMessage = null;
     try {
@@ -122,8 +122,8 @@ class DigitalSignatureServiceTest {
     verify(digitalSealRestClient).verify(requestCaptor.capture());
 
     assertEquals("error_message", exceptionMessage);
-    assertEquals(SIGNATURE, requestCaptor.getValue().signature());
-    assertEquals(DATA_STR, requestCaptor.getValue().data());
+    assertEquals(SIGNATURE, requestCaptor.getValue().getSignature());
+    assertEquals(DATA_STR, requestCaptor.getValue().getData());
   }
 
   @Test
