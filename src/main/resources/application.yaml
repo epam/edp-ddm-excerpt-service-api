@@ -96,13 +96,20 @@ excerpt-signature-ceph:
 
 data-platform:
   kafka:
-    group-id: excerpt-service-api
-    trusted-packages:
-      - com.epam.digital.data.platform.excerpt.api.model
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      custom-config:
+        "[enable.idempotence]": true
+    topic-properties:
+      creation:
+        enabled: true
+        timeout-in-seconds: 60
+      retention:
+        default-in-days: 7
     error-handler:
       initial-interval: 1500
       max-elapsed-time: 6000
       multiplier: 2
-    topic-properties:
-      retention-policy-in-days: 7
-    topic: generate-excerpt
+    topics:
+      generate-excerpt: generate-excerpt
