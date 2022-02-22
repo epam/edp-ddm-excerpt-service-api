@@ -1,10 +1,10 @@
-FROM nexus-docker-registry.apps.cicd2.mdtu-ddm.projects.epam.com/openjdk:11.0.7-jre-slim AS builder
+FROM openjdk:11.0.13-jre-slim AS builder
 WORKDIR /application
 ARG JAR_FILE=target/excerpt-service-api-*.jar
 COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
 
-FROM nexus-docker-registry.apps.cicd2.mdtu-ddm.projects.epam.com/openjdk:11.0.7-jre-slim
+FROM openjdk:11.0.13-jre-slim
 WORKDIR /application
 COPY --from=builder application/dependencies/ ./
 COPY --from=builder application/spring-boot-loader/ ./
