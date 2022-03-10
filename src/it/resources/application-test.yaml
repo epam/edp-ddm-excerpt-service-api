@@ -1,0 +1,50 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  autoconfigure:
+    exclude: com.epam.digital.data.platform.starter.database.DatabaseAutoConfiguration
+    
+data-platform:
+  datasource:
+    url: ${spring.datasource.url}
+    username: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+  signature:
+    enabled: false
+  kafka:
+    bootstrap: localhost:9092
+    topic-properties:
+      num-partitions: 1
+      replication-factor: 1
+    ssl:
+      enabled: false
+    topics:
+      read-settings: read-settings-inbound
+      update-settings: update-settings-inbound
+audit:
+  kafka:
+    bootstrap: localhost:9092
+    topic: audit-events
+    schema-registry-url: http://localhost:8081
+    ssl:
+      enabled: false
+
+request-signature-ceph:
+  http-endpoint: localhost:5555
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
+datafactory-excerpt-ceph:
+  http-endpoint: localhost:5555
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
+excerpt-signature-ceph:
+  http-endpoint: localhost:5555
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
+      
+dso:
+  url: http://digital-signature-ops:8080

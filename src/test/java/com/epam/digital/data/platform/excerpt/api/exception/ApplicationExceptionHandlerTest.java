@@ -280,15 +280,22 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
     expectedResponseObject.setDetails(
         validationDetailsFrom(new FieldsValidationErrorDetails.FieldError(
             "invalidtypename", "excerptType", "must match \"^[a-zA-Z]{6,10}$\"")));
-    String expectedOutputBody = objectMapper.writeValueAsString(expectedResponseObject);
 
-    mockMvc.perform(post(BASE_URL)
+    var result = mockMvc.perform(post(BASE_URL)
         .contentType(MediaType.APPLICATION_JSON)
         .content(inputStringBody))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(response ->
-            assertTrue(response.getResolvedException() instanceof MethodArgumentNotValidException))
-        .andExpect(content().json(expectedOutputBody));
+            assertTrue(response.getResolvedException() instanceof MethodArgumentNotValidException));
+    
+    var traceId = objectMapper.readValue(
+        result.andReturn().getResponse().getContentAsString(), DetailedErrorResponse.class)
+        .getTraceId();
+    
+    expectedResponseObject.setTraceId(traceId);
+    String expectedOutputBody = objectMapper.writeValueAsString(expectedResponseObject);
+    
+    result.andExpect(content().json(expectedOutputBody));
   }
 
   public static FieldsValidationErrorDetails validationDetailsFrom(

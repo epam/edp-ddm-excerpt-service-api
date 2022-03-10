@@ -1,0 +1,17 @@
+{
+  "recordId": null,
+  "excerptType": "template",
+  "excerptInputData": {
+    "registryName": "RegistryName",
+    "requests": [
+      {
+        "id": "6fb56a21-996a-495c-a51f-70982270f27f",
+        "officerName": "officerName",
+        "operation": "creating",
+        "time": "2021-06-27T18:05:23.723909",
+        "businessProcess": "registration"
+      }
+    ]
+  },
+  "requiresSystemSignature": false
+}
