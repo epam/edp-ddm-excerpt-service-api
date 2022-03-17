@@ -1,4 +1,6 @@
 spring:
+  zipkin:
+    enabled: false
   jpa:
     hibernate:
       ddl-auto: update
@@ -6,10 +8,6 @@ spring:
     exclude: com.epam.digital.data.platform.starter.database.DatabaseAutoConfiguration
     
 data-platform:
-  datasource:
-    url: ${spring.datasource.url}
-    username: ${spring.datasource.username}
-    password: ${spring.datasource.password}
   signature:
     enabled: false
   kafka:
@@ -19,9 +17,6 @@ data-platform:
       replication-factor: 1
     ssl:
       enabled: false
-    topics:
-      read-settings: read-settings-inbound
-      update-settings: update-settings-inbound
 audit:
   kafka:
     bootstrap: localhost:9092
