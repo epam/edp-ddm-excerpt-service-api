@@ -17,7 +17,7 @@
     <ddm.starter.database.version>1.5.0-SNAPSHOT</ddm.starter.database.version>
     <ddm.starter.logger.version>1.5.1-SNAPSHOT</ddm.starter.logger.version>
     <ddm.starter.swagger.version>1.5.0-SNAPSHOT</ddm.starter.swagger.version>
-    <ddm.starter.actuator.version>1.5.2-SNAPSHOT</ddm.starter.actuator.version>
+    <ddm.starter.actuator.version>1.5.3-SNAPSHOT</ddm.starter.actuator.version>
     <ddm.starter.security.version>1.5.2-SNAPSHOT</ddm.starter.security.version>
     <ddm.starter.audit.version>1.5.2-SNAPSHOT</ddm.starter.audit.version>
     <ddm.ceph.client.version>1.5.2-SNAPSHOT</ddm.ceph.client.version>
