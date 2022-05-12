@@ -13,8 +13,9 @@ data-platform:
   kafka:
     bootstrap: localhost:9092
     topic-properties:
-      num-partitions: 1
-      replication-factor: 1
+      creation:
+        num-partitions: 1
+        replication-factor: 1
     ssl:
       enabled: false
 audit:

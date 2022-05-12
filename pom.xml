@@ -13,7 +13,7 @@
 
   <properties>
     <excerpt.model.version>1.6.0.2</excerpt.model.version>
-    <ddm.starter.kafka.version>1.6.0.1</ddm.starter.kafka.version>
+    <ddm.starter.kafka.version>1.6.0.2</ddm.starter.kafka.version>
     <ddm.starter.database.version>1.6.0.1</ddm.starter.database.version>
     <ddm.starter.logger.version>1.6.0.1</ddm.starter.logger.version>
     <ddm.starter.swagger.version>1.6.0.1</ddm.starter.swagger.version>

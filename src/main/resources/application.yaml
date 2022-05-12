@@ -97,20 +97,12 @@ excerpt-signature-ceph:
 data-platform:
   kafka:
     producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      enabled: true
       custom-config:
         "[enable.idempotence]": true
     topic-properties:
       creation:
         enabled: true
-        timeout-in-seconds: 60
-      retention:
-        default-in-days: 7
-    error-handler:
-      initial-interval: 1500
-      max-elapsed-time: 6000
-      multiplier: 2
     topics:
       pdf: generate-excerpt
       docx: generate-excerpt-docx

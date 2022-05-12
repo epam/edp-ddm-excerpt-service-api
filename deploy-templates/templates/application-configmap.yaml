@@ -12,8 +12,9 @@ data:
       kafka:
         bootstrap: {{ .Values.kafka.service }}
         topic-properties:
-          num-partitions: {{ .Values.kafka.numPartitions }}
-          replication-factor: {{ .Values.global.kafkaOperator.replicationFactor }}
+          creation:
+            num-partitions: {{ .Values.kafka.numPartitions }}
+            replication-factor: {{ .Values.global.kafkaOperator.replicationFactor }}
         ssl:
           enabled: {{ .Values.kafka.sslEnabled }}
           keystore-type: {{ .Values.kafka.sslCertType }}
