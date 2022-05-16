@@ -89,7 +89,7 @@ class ExcerptGenerationServiceTest {
         instance.generateExcerpt(buildExcerptEvent(), requestContext(), securityContext());
 
     verify(recordRepository).save(any());
-    verify(kafkaHelper).send(any(), any(), any());
+    verify(kafkaHelper).send(any(), any(), any(), any());
     assertThat(entityId.getExcerptIdentifier()).isEqualTo(ID);
   }
 
@@ -129,9 +129,12 @@ class ExcerptGenerationServiceTest {
   private void setupExcerptFound() {
     var record = new ExcerptRecord();
     record.setId(ID);
-    when(templateRepository.findFirstByTemplateName("test_type"))
-        .thenReturn(Optional.of(new ExcerptTemplate()));
     when(recordRepository.save(any())).thenReturn(record);
+    
+    var template = new ExcerptTemplate();
+    template.setTemplateType("pdf");
+    when(templateRepository.findFirstByTemplateName("test_type"))
+        .thenReturn(Optional.of(template));
   }
 
   private ExcerptEventDto buildExcerptEvent() {

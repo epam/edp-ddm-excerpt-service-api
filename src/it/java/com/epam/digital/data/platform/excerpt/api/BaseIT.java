@@ -60,6 +60,7 @@ public abstract class BaseIT {
     var excerptTemplate = new ExcerptTemplate();
     excerptTemplate.setTemplateName(name);
     excerptTemplate.setTemplate(template);
+    excerptTemplate.setTemplateType("pdf");
     return templateRepository.save(excerptTemplate);
   }
 

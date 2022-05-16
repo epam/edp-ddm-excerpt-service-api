@@ -12,7 +12,7 @@
   <description>EXCERPT SERVICE API</description>
 
   <properties>
-    <model.version>1.6.0.1</model.version>
+    <excerpt.model.version>1.6.0.2</excerpt.model.version>
     <ddm.starter.kafka.version>1.6.0.1</ddm.starter.kafka.version>
     <ddm.starter.database.version>1.6.0.1</ddm.starter.database.version>
     <ddm.starter.logger.version>1.6.0.1</ddm.starter.logger.version>
@@ -124,7 +124,7 @@
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
       <artifactId>excerpt-model</artifactId>
-      <version>${model.version}</version>
+      <version>${excerpt.model.version}</version>
     </dependency>
 
     <dependency>

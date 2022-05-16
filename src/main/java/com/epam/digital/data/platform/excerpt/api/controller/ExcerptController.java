@@ -47,7 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ExcerptController {
 
   private static final String CONTENT_DISPOSITION_HEADER_NAME = "Content-Disposition";
-  private static final String ATTACHMENT_HEADER_VALUE = "attachment; filename=\"%s.pdf\"";
+  private static final String ATTACHMENT_HEADER_VALUE = "attachment; filename=\"%s.%s\"";
 
   private final Logger log = LoggerFactory.getLogger(ExcerptController.class);
 
@@ -85,10 +85,10 @@ public class ExcerptController {
 
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
-        .contentLength(excerpt.getMetadata().getContentLength())
-        .header(
-            CONTENT_DISPOSITION_HEADER_NAME, String.format(ATTACHMENT_HEADER_VALUE, id.toString()))
-        .body(new InputStreamResource(excerpt.getContent()));
+        .contentLength(excerpt.getCephObject().getMetadata().getContentLength())
+        .header(CONTENT_DISPOSITION_HEADER_NAME,
+            String.format(ATTACHMENT_HEADER_VALUE, id.toString(), excerpt.getExcerptType()))
+        .body(new InputStreamResource(excerpt.getCephObject().getContent()));
   }
 
   @GetMapping("/{id}/status")

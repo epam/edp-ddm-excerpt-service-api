@@ -35,8 +35,6 @@ import org.springframework.util.concurrent.ListenableFutureCallback;
 @Component
 public class KafkaHelper {
 
-  private static final String TOPIC_NAME = "generate-excerpt";
-
   private final Logger log = LoggerFactory.getLogger(KafkaHelper.class);
 
   private final KafkaTemplate<String, Request<ExcerptEventDto>> kafkaTemplate;
@@ -52,12 +50,13 @@ public class KafkaHelper {
     this.recordRepository = recordRepository;
   }
 
-  public void send(ExcerptRecord newRecord, String name, Map<String, Object> json) {
+  public void send(ExcerptRecord newRecord, String name, Map<String, Object> json, String templateType) {
     var event = new ExcerptEventDto(newRecord.getId(), name, json, newRecord.getSignatureRequired());
     Request<ExcerptEventDto> request = new Request<>(event);
 
     log.info("Send Excerpt generation Event to Kafka");
-    var future = kafkaTemplate.send(kafkaProperties.getTopics().get(TOPIC_NAME), request);
+    var topic = kafkaProperties.getTopics().get(templateType);
+    var future = kafkaTemplate.send(topic, request);
     future.addCallback(new ListenableFutureCallback<>() {
 
       @Override

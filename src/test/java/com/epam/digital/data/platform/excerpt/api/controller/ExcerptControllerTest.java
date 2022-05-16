@@ -20,7 +20,6 @@ import static com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStat
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.ResultMatcher.matchAll;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -28,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.epam.digital.data.platform.excerpt.api.model.CephObjectWrapper;
 import com.epam.digital.data.platform.excerpt.api.service.ExcerptGenerationService;
 import com.epam.digital.data.platform.excerpt.api.service.ExcerptRetrievingService;
 import com.epam.digital.data.platform.excerpt.api.service.ExcerptStatusCheckService;
@@ -35,6 +35,7 @@ import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.UUID;
 
 import com.epam.digital.data.platform.excerpt.model.StatusDto;
@@ -55,7 +56,7 @@ class ExcerptControllerTest {
   static final long EXCERPT_CONTENT_LENGTH = 4;
 
   static final String CONTENT_DISPOSITION_HEADER_NAME = "Content-Disposition";
-  static final String CONTENT_DISPOSITION_HEADER_VALUE = "attachment; filename=\"123e4567-e89b-12d3-a456-426614174000.pdf\"";
+  static final String CONTENT_DISPOSITION_HEADER_VALUE = "attachment; filename=\"123e4567-e89b-12d3-a456-426614174000.type\"";
   static final String CONTENT_LENGTH_HEADER_NAME = "Content-Length";
 
   @Autowired
@@ -76,11 +77,11 @@ class ExcerptControllerTest {
         .thenReturn(new StatusDto(expectedStatus, expectedDetails));
 
     mockMvc.perform(get(BASE_URL + "/{id}/status", ID))
-        .andExpect(matchAll(
+        .andExpectAll(
             status().isOk(),
             content().contentType(MediaType.APPLICATION_JSON),
             jsonPath("$.status", is(expectedStatus.toString())),
-            jsonPath("$.statusDetails", is(expectedDetails)))
+            jsonPath("$.statusDetails", is(expectedDetails))
         );
   }
 
@@ -96,10 +97,10 @@ class ExcerptControllerTest {
               + "\"excerptInputData\": {\"field\": \"data\"},"
               + "\"requiresSystemSignature\": false}"
         ))
-        .andExpect(matchAll(
+        .andExpectAll(
             status().isOk(),
             content().contentType(MediaType.APPLICATION_JSON),
-            jsonPath("$.excerptIdentifier", is(ID.toString())))
+            jsonPath("$.excerptIdentifier", is(ID.toString()))
         );
   }
 
@@ -110,17 +111,18 @@ class ExcerptControllerTest {
             .content(excerptContent)
             .metadata(CephObjectMetadata.builder()
                     .contentLength(EXCERPT_CONTENT_LENGTH)
+                    .userMetadata(Collections.singletonMap("templateType", "type"))
                     .build())
             .build();
     when(excerptRetrievingService.getExcerpt(any(), any()))
-        .thenReturn(excerpt);
+        .thenReturn(new CephObjectWrapper(excerpt, "type"));
 
     mockMvc.perform(get(BASE_URL + "/{id}", ID))
-        .andExpect(matchAll(
+        .andExpectAll(
             status().isOk(),
             content().contentType(MediaType.APPLICATION_OCTET_STREAM),
             header().longValue(CONTENT_LENGTH_HEADER_NAME, EXCERPT_CONTENT_LENGTH),
-            header().string(CONTENT_DISPOSITION_HEADER_NAME, CONTENT_DISPOSITION_HEADER_VALUE))
+            header().string(CONTENT_DISPOSITION_HEADER_NAME, CONTENT_DISPOSITION_HEADER_VALUE)
         );
   }
 }

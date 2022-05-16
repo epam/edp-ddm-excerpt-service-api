@@ -112,4 +112,6 @@ data-platform:
       max-elapsed-time: 6000
       multiplier: 2
     topics:
-      generate-excerpt: generate-excerpt
+      pdf: generate-excerpt
+      docx: generate-excerpt-docx
+      csv: generate-excerpt-csv

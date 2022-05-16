@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.excerpt.api.service;
 
 import com.epam.digital.data.platform.excerpt.api.exception.ExcerptNotFoundException;
 import com.epam.digital.data.platform.excerpt.api.exception.InvalidKeycloakIdException;
+import com.epam.digital.data.platform.excerpt.api.model.CephObjectWrapper;
 import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
 import com.epam.digital.data.platform.excerpt.api.repository.RecordRepository;
 import com.epam.digital.data.platform.excerpt.api.util.JwtHelper;
@@ -53,7 +54,7 @@ public class ExcerptRetrievingService {
     this.bucket = bucket;
   }
 
-  public CephObject getExcerpt(UUID id, SecurityContext context) {
+  public CephObjectWrapper getExcerpt(UUID id, SecurityContext context) {
     var excerpt = recordRepository.findById(id)
             .orElseThrow(() -> new ExcerptNotFoundException("Record not found in DB: " + id));
 
@@ -64,13 +65,11 @@ public class ExcerptRetrievingService {
       log.error("Could not find excerpt with null Ceph key");
       throw new ExcerptNotFoundException("Could not find excerpt with null Ceph key");
     }
-    return
-            excerptCephService
-                    .get(bucket, excerpt.getExcerptKey())
-                    .orElseThrow(
-                            () ->
-                                    new ExcerptNotFoundException(
-                                            "Excerpt not found in Ceph: " + excerpt.getExcerptKey()));
+    CephObject cephObject = excerptCephService
+        .get(bucket, excerpt.getExcerptKey())
+        .orElseThrow(() -> new ExcerptNotFoundException(
+                    "Excerpt not found in Ceph: " + excerpt.getExcerptKey()));
+    return new CephObjectWrapper(cephObject, excerpt.getExcerptType());
   }
 
   private void validateKeycloakId(ExcerptRecord excerpt, SecurityContext context) {

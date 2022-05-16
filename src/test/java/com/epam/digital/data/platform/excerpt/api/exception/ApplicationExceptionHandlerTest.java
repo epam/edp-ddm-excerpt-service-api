@@ -21,7 +21,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.ResultMatcher.matchAll;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -59,8 +58,9 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
   private static final String METHOD_ARGUMENT_TYPE_MISMATCH = "METHOD_ARGUMENT_TYPE_MISMATCH";
   private static final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
 
-  private static final String VALID_INPUT = "{\"recordId\":\"6d34cbd7-dded-495a-a1c6-4f37d823b59d\","
-      + "\"excerptType\":\"validtype\",\"updatedAt\":\"2021-07-29T11:52:39.972053\"}";
+  private static final String VALID_INPUT =
+      "{\"recordId\":\"6d34cbd7-dded-495a-a1c6-4f37d823b59d\","
+          + "\"excerptType\":\"validtype\",\"updatedAt\":\"2021-07-29T11:52:39.972053\"}";
 
   @Autowired
   private MockMvc mockMvc;
@@ -70,16 +70,17 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
   private MockService mockService;
 
   @Test
-  void shouldReturn500ThirdPartyServiceUnavailableWhenCephCommunicationException() throws Exception {
+  void shouldReturn500ThirdPartyServiceUnavailableWhenCephCommunicationException()
+      throws Exception {
     when(mockService.generateExcerpt(any())).thenThrow(CephCommunicationException.class);
 
     mockMvc.perform(post(BASE_URL)
             .contentType(MediaType.APPLICATION_JSON)
             .content(VALID_INPUT))
         .andExpect(status().isInternalServerError())
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.code").value(is("THIRD_PARTY_SERVICE_UNAVAILABLE")),
-            jsonPath("$.details").doesNotExist()))
+            jsonPath("$.details").doesNotExist())
         .andExpect(response -> assertTrue(
             response.getResolvedException() instanceof CephCommunicationException));
   }
@@ -92,39 +93,42 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
             .contentType(MediaType.APPLICATION_JSON)
             .content(VALID_INPUT))
         .andExpect(status().isInternalServerError())
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.code").value(is("INTERNAL_CONTRACT_VIOLATION")),
-            jsonPath("$.details").doesNotExist()))
+            jsonPath("$.details").doesNotExist())
         .andExpect(response -> assertTrue(
             response.getResolvedException() instanceof MisconfigurationException));
   }
 
   @Test
-  void shouldReturn500ThirdPartyServiceUnavailableWhenKepServiceInternalServerErrorException() throws Exception {
-    when(mockService.generateExcerpt(any())).thenThrow(KepServiceInternalServerErrorException.class);
+  void shouldReturn500ThirdPartyServiceUnavailableWhenKepServiceInternalServerErrorException()
+      throws Exception {
+    when(mockService.generateExcerpt(any())).thenThrow(
+        KepServiceInternalServerErrorException.class);
 
     mockMvc.perform(post(BASE_URL)
             .contentType(MediaType.APPLICATION_JSON)
             .content(VALID_INPUT))
         .andExpect(status().isInternalServerError())
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.code").value(is("THIRD_PARTY_SERVICE_UNAVAILABLE")),
-            jsonPath("$.details").doesNotExist()))
+            jsonPath("$.details").doesNotExist())
         .andExpect(response -> assertTrue(
             response.getResolvedException() instanceof KepServiceInternalServerErrorException));
   }
 
   @Test
-  void shouldReturn500InternalContractViolationWhenKepServiceBadRequestException() throws Exception {
+  void shouldReturn500InternalContractViolationWhenKepServiceBadRequestException()
+      throws Exception {
     when(mockService.generateExcerpt(any())).thenThrow(KepServiceBadRequestException.class);
 
     mockMvc.perform(post(BASE_URL)
             .contentType(MediaType.APPLICATION_JSON)
             .content(VALID_INPUT))
         .andExpect(status().isInternalServerError())
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.code").value(is("INTERNAL_CONTRACT_VIOLATION")),
-            jsonPath("$.details").doesNotExist()))
+            jsonPath("$.details").doesNotExist())
         .andExpect(response -> assertTrue(
             response.getResolvedException() instanceof KepServiceBadRequestException));
   }
@@ -137,9 +141,9 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
             .contentType(MediaType.APPLICATION_JSON)
             .content(VALID_INPUT))
         .andExpect(status().isPreconditionFailed())
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.code").value(is("SIGNATURE_VIOLATION")),
-            jsonPath("$.details").doesNotExist()))
+            jsonPath("$.details").doesNotExist())
         .andExpect(response -> assertTrue(
             response.getResolvedException() instanceof InvalidSignatureException));
   }
@@ -152,11 +156,26 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
             .contentType(MediaType.APPLICATION_JSON)
             .content(VALID_INPUT))
         .andExpect(status().isBadRequest())
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.code").value(is("INVALID_HEADER_VALUE")),
-            jsonPath("$.details").doesNotExist()))
+            jsonPath("$.details").doesNotExist())
         .andExpect(response -> assertTrue(
             response.getResolvedException() instanceof DigitalSignatureNotFoundException));
+  }
+
+  @Test
+  void shouldReturn400SigningNotAllowedValueWhenSigningNotAllowedException() throws Exception {
+    when(mockService.generateExcerpt(any())).thenThrow(SigningNotAllowedException.class);
+
+    mockMvc.perform(post(BASE_URL)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(VALID_INPUT))
+        .andExpect(status().isBadRequest())
+        .andExpectAll(
+            jsonPath("$.code").value(is("SIGNING_NOT_ALLOWED")),
+            jsonPath("$.details").doesNotExist())
+        .andExpect(response -> assertTrue(
+            response.getResolvedException() instanceof SigningNotAllowedException));
   }
 
   @Test
@@ -167,9 +186,9 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
             .contentType(MediaType.APPLICATION_JSON)
             .content(VALID_INPUT))
         .andExpect(status().isBadRequest())
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.code").value(is("HEADERS_ARE_MISSING")),
-            jsonPath("$.details").doesNotExist()))
+            jsonPath("$.details").doesNotExist())
         .andExpect(response -> assertTrue(
             response.getResolvedException() instanceof MandatoryHeaderMissingException));
   }
@@ -182,9 +201,9 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
         .andExpect(status().isNotFound())
         .andExpect(response -> assertTrue(
             response.getResolvedException() instanceof ExcerptNotFoundException))
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.code").value(is("NOT_FOUND")),
-            jsonPath("$.details").doesNotExist()));
+            jsonPath("$.details").doesNotExist());
   }
 
   @Test
@@ -195,9 +214,9 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
         .andExpect(status().isBadRequest())
         .andExpect(response -> assertTrue(
             response.getResolvedException() instanceof ExcerptProcessingException))
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.status").value(is("FAILED")),
-            jsonPath("$.statusDetails").value(is("test"))));
+            jsonPath("$.statusDetails").value(is("test")));
   }
 
   @Test
@@ -206,9 +225,9 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
 
     mockMvc.perform(get(BASE_URL + "/{id}", ENTITY_ID))
         .andExpect(status().isInternalServerError())
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.code").value(is("RUNTIME_ERROR")),
-            jsonPath("$.statusDetails").doesNotExist()));
+            jsonPath("$.statusDetails").doesNotExist());
   }
 
   @Test
@@ -217,9 +236,9 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
 
     mockMvc.perform(get(BASE_URL + "/{id}", ENTITY_ID))
         .andExpect(status().isBadRequest())
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.code").value(is("INVALID_KEYCLOAK_ID")),
-            jsonPath("$.statusDetails").doesNotExist()));
+            jsonPath("$.statusDetails").doesNotExist());
   }
 
   @Test
@@ -239,8 +258,8 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
     var inputString = "{\"recordId\":null,\"excerptType\":\"validtype\",\"updatedAt\":\"202ss1-07-29T11:52:39.972053\"}";
 
     mockMvc.perform(post(BASE_URL)
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(inputString))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(inputString))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(response -> assertTrue(
             response.getResolvedException() instanceof HttpMessageNotReadableException));
@@ -249,10 +268,10 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
   @Test
   void shouldReturn400WithBodyWhenPathArgumentIsNotValid() throws Exception {
     mockMvc.perform(get(BASE_URL + "/invalidUUID"))
-        .andExpect(matchAll(
+        .andExpectAll(
             status().isBadRequest(),
             jsonPath("$.code").value(is(METHOD_ARGUMENT_TYPE_MISMATCH)),
-            jsonPath("$.details").doesNotExist())
+            jsonPath("$.details").doesNotExist()
         );
   }
 
@@ -262,10 +281,9 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
 
     mockMvc
         .perform(get(BASE_URL + "/{id}", ENTITY_ID))
-        .andExpect(
-            matchAll(
-                status().isForbidden(),
-                jsonPath("$.code").value(is(FORBIDDEN_OPERATION))));
+        .andExpectAll(
+            status().isForbidden(),
+            jsonPath("$.code").value(is(FORBIDDEN_OPERATION)));
   }
 
   @Test
@@ -282,19 +300,19 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
             "invalidtypename", "excerptType", "must match \"^[a-zA-Z]{6,10}$\"")));
 
     var result = mockMvc.perform(post(BASE_URL)
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(inputStringBody))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(inputStringBody))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(response ->
             assertTrue(response.getResolvedException() instanceof MethodArgumentNotValidException));
-    
+
     var traceId = objectMapper.readValue(
-        result.andReturn().getResponse().getContentAsString(), DetailedErrorResponse.class)
+            result.andReturn().getResponse().getContentAsString(), DetailedErrorResponse.class)
         .getTraceId();
-    
+
     expectedResponseObject.setTraceId(traceId);
     String expectedOutputBody = objectMapper.writeValueAsString(expectedResponseObject);
-    
+
     result.andExpect(content().json(expectedOutputBody));
   }
 

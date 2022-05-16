@@ -25,6 +25,7 @@ import com.epam.digital.data.platform.excerpt.dao.ExcerptRecord;
 import com.epam.digital.data.platform.integration.ceph.model.CephObject;
 import com.epam.digital.data.platform.integration.ceph.model.CephObjectMetadata;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
+import java.util.HashMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -124,19 +125,21 @@ class ExcerptRetrievingServiceTest {
     var record = new ExcerptRecord();
     record.setKeycloakId("stubId");
     record.setExcerptKey("ceph-key");
+    record.setExcerptType("type");
 
     when(jwtHelper.getKeycloakId(any())).thenReturn("stubId");
     when(recordRepository.findById(any())).thenReturn(Optional.of(record));
     var cephServiceResponse = CephObject.builder()
             .content(new ByteArrayInputStream("test".getBytes()))
-            .metadata(new CephObjectMetadata())
+            .metadata(CephObjectMetadata.builder().userMetadata(new HashMap<>()).build())
             .build();
     when(excerptCephService.get(any(), any())).thenReturn(
             Optional.of(cephServiceResponse));
 
     var actualExcerptResponse = instance.getExcerpt(ID, securityContext());
 
-    assertThat(actualExcerptResponse).isEqualTo(cephServiceResponse);
+    assertThat(actualExcerptResponse.getCephObject()).isEqualTo(cephServiceResponse);
+    assertThat(actualExcerptResponse.getExcerptType()).isEqualTo("type");
   }
 
   private SecurityContext securityContext() {

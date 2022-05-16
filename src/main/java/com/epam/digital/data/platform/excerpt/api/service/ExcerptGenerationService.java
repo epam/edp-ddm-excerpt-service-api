@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.excerpt.api.service;
 
 import com.epam.digital.data.platform.excerpt.api.exception.ExcerptProcessingException;
 import com.epam.digital.data.platform.excerpt.api.exception.MandatoryHeaderMissingException;
+import com.epam.digital.data.platform.excerpt.api.exception.SigningNotAllowedException;
 import com.epam.digital.data.platform.excerpt.api.model.RequestContext;
 import com.epam.digital.data.platform.excerpt.api.model.SecurityContext;
 import com.epam.digital.data.platform.excerpt.api.repository.RecordRepository;
@@ -25,8 +26,10 @@ import com.epam.digital.data.platform.excerpt.api.repository.TemplateRepository;
 import com.epam.digital.data.platform.excerpt.api.util.Header;
 import com.epam.digital.data.platform.excerpt.api.util.JwtHelper;
 import com.epam.digital.data.platform.excerpt.dao.ExcerptRecord;
+import com.epam.digital.data.platform.excerpt.dao.ExcerptTemplate;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEntityId;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +42,8 @@ import static com.epam.digital.data.platform.excerpt.model.ExcerptProcessingStat
 @Service
 public class ExcerptGenerationService {
 
+  private static final Set<String> UNSIGNED_TYPES = Set.of("docx", "csv");
+  
   private final RecordRepository recordRepository;
   private final TemplateRepository templateRepository;
 
@@ -69,10 +74,12 @@ public class ExcerptGenerationService {
     var excerptType = excerptEventDto.getExcerptType();
 
     validateAndSaveSignatures(excerptEventDto, securityContext);
-    validateTemplate(excerptType);
+    var excerptTemplate = validateTemplate(excerptType);
+    validateTemplateType(excerptTemplate, excerptEventDto);
 
-    var newRecord = recordRepository.save(buildRecord(excerptEventDto, requestContext, securityContext));
-    kafkaHelper.send(newRecord, excerptType, excerptEventDto.getExcerptInputData());
+    var newRecord = recordRepository.save(buildRecord(excerptEventDto, requestContext,
+        securityContext, excerptTemplate.getTemplateType()));
+    kafkaHelper.send(newRecord, excerptType, excerptEventDto.getExcerptInputData(), excerptTemplate.getTemplateType());
 
     return new ExcerptEntityId(newRecord.getId());
   }
@@ -104,15 +111,22 @@ public class ExcerptGenerationService {
     }
   }
 
-  private void validateTemplate(String excerptType) {
-    templateRepository
+  private ExcerptTemplate validateTemplate(String excerptType) {
+    return templateRepository
         .findFirstByTemplateName(excerptType)
         .orElseThrow(
             () -> new ExcerptProcessingException(FAILED, "Template not found: " + excerptType));
   }
+  
+  private void validateTemplateType(ExcerptTemplate excerptTemplate, ExcerptEventDto eventDto) {
+    String templateType = excerptTemplate.getTemplateType();
+    if(UNSIGNED_TYPES.contains(templateType) && eventDto.isRequiresSystemSignature()) {
+      throw new SigningNotAllowedException(templateType + " file not allowed to sign");
+    }
+  }
 
-  private ExcerptRecord buildRecord(ExcerptEventDto excerptEventDto,
-                                    RequestContext requestContext, SecurityContext securityContext) {
+  private ExcerptRecord buildRecord(ExcerptEventDto excerptEventDto, RequestContext requestContext,
+      SecurityContext securityContext, String templateType) {
     var excerptRecord = new ExcerptRecord();
     excerptRecord.setStatus(IN_PROGRESS);
     var now = LocalDateTime.now();
@@ -127,6 +141,7 @@ public class ExcerptGenerationService {
     excerptRecord.setxSourceApplication(requestContext.getSourceApplication());
     excerptRecord.setxSourceBusinessProcess(requestContext.getSourceBusinessProcess());
     excerptRecord.setxSourceBusinessActivity(requestContext.getSourceBusinessActivity());
+    excerptRecord.setExcerptType(templateType);
     return excerptRecord;
   }
 }

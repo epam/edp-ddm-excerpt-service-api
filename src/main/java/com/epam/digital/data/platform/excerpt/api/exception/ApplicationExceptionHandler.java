@@ -66,6 +66,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String VALIDATION_ERROR = "VALIDATION_ERROR";
   private static final String METHOD_ARGUMENT_TYPE_MISMATCH = "METHOD_ARGUMENT_TYPE_MISMATCH";
   private static final String AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED";
+  private static final String SIGNING_NOT_ALLOWED = "SIGNING_NOT_ALLOWED";
 
   @AuditableException
   @ExceptionHandler(CephCommunicationException.class)
@@ -120,6 +121,16 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Digital signature not found", exception);
     DetailedErrorResponse<Void> responseBody =
         newDetailedResponse(INVALID_HEADER_VALUE);
+    return ResponseEntity.status(BAD_REQUEST).body(responseBody);
+  }
+  
+  @AuditableException
+  @ExceptionHandler(SigningNotAllowedException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleSigningNotAllowedException(
+      SigningNotAllowedException exception) {
+    log.error("File of this type is not allowed to be signed", exception);
+    DetailedErrorResponse<Void> responseBody =
+        newDetailedResponse(SIGNING_NOT_ALLOWED);
     return ResponseEntity.status(BAD_REQUEST).body(responseBody);
   }
 
