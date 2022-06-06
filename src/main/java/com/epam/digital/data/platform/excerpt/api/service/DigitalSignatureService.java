@@ -26,77 +26,56 @@ import com.epam.digital.data.platform.excerpt.api.exception.InvalidSignatureExce
 import com.epam.digital.data.platform.excerpt.api.exception.KepServiceBadRequestException;
 import com.epam.digital.data.platform.excerpt.api.exception.KepServiceInternalServerErrorException;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
-import com.epam.digital.data.platform.integration.ceph.service.CephService;
+import com.epam.digital.data.platform.storage.form.dto.FormDataDto;
+import com.epam.digital.data.platform.storage.form.service.FormDataStorageService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class DigitalSignatureService {
 
   private static final String SIGNATURE = "signature";
 
   private final Logger log = LoggerFactory.getLogger(DigitalSignatureService.class);
 
-  private final CephService requestSignatureCephService;
-  private final CephService excerptSignatureCephService;
-  private final String requestSignatureBucket;
-  private final String excerptSignatureBucket;
+  private final FormDataStorageService lowcodeFormDataStorageService;
+  private final FormDataStorageService datafactoryExcerptDataStorageService;
   private final DigitalSealRestClient digitalSealRestClient;
   private final ObjectMapper objectMapper;
 
-  public DigitalSignatureService(
-      @Qualifier("requestSignatureCephService") CephService requestSignatureCephService,
-      @Qualifier("excerptSignatureCephService") CephService excerptSignatureCephService,
-      @Value("${request-signature-ceph.bucket}") String requestSignatureBucket,
-      @Value("${excerpt-signature-ceph.bucket}") String excerptSignatureBucket,
-      DigitalSealRestClient digitalSealRestClient,
-      ObjectMapper objectMapper) {
-    this.requestSignatureCephService = requestSignatureCephService;
-    this.excerptSignatureCephService = excerptSignatureCephService;
-    this.requestSignatureBucket = requestSignatureBucket;
-    this.excerptSignatureBucket = excerptSignatureBucket;
-    this.digitalSealRestClient = digitalSealRestClient;
-    this.objectMapper = objectMapper;
-  }
-
   public void checkSignature(ExcerptEventDto data, String key) {
     log.info("Retrieve Signature from Ceph");
-    String responseFromCeph =
-        requestSignatureCephService
-            .getAsString(requestSignatureBucket, key)
+    var formDataDto =
+        lowcodeFormDataStorageService
+            .getFormData(key)
             .orElseThrow(
                 () -> new DigitalSignatureNotFoundException(
                     "Signature does not exist in ceph bucket. Key: " + key));
 
-    String signature;
     String dataStr;
     try {
-      Map<String, Object> cephResponse = objectMapper.readValue(responseFromCeph, Map.class);
-
-      signature = (String) cephResponse.get(SIGNATURE);
       dataStr = objectMapper.writeValueAsString(data);
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
 
-    verify(signature, dataStr);
+    verify(formDataDto.getSignature(), dataStr);
   }
 
-  public String saveSignature(String key) {
+  public FormDataDto saveSignature(String key) {
     log.info("Store Signature to Ceph");
-    String value =
-        requestSignatureCephService
-            .getAsString(requestSignatureBucket, key)
+    var value =
+        lowcodeFormDataStorageService
+            .getFormData(key)
             .orElseThrow(
                 () -> new DigitalSignatureNotFoundException(
                     "Signature does not exist in ceph bucket. Key: " + key));
-    excerptSignatureCephService.put(excerptSignatureBucket, key, value);
+    datafactoryExcerptDataStorageService.putFormData(key, value);
     return value;
   }
 

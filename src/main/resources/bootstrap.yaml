@@ -22,13 +22,12 @@ spring:
           - /app/secrets/excerptsignatureceph
 ---
 spring:
+  config:
+    activate:
+      on-profile: test, local
   cloud:
     kubernetes:
       config:
         enabled: false
-  config:
-    activate:
-      on-profile: local
-
 logging:
-  config: ''
+  config: classpath:log4j2-local-console.xml
