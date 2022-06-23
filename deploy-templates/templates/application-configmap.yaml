@@ -62,7 +62,7 @@ data:
             http-endpoint: ${request-signature-ceph.http-endpoint}
             access-key: ${request-signature-ceph.access-key}
             secret-key: ${request-signature-ceph.secret-key}
-            bucket: ${request-signature-ceph.bucketName}
+            bucket: ${request-signature-ceph.bucket}
       datafactory-excerpt-signature-storage:
         type: ceph
         backend:
@@ -70,4 +70,4 @@ data:
             http-endpoint: ${excerpt-signature-ceph.http-endpoint}
             access-key: ${excerpt-signature-ceph.access-key}
             secret-key: ${excerpt-signature-ceph.secret-key}
-            bucket: ${excerpt-signature-ceph.bucketName}
+            bucket: ${excerpt-signature-ceph.bucket}
