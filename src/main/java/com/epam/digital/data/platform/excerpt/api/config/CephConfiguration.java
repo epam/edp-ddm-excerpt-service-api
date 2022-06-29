@@ -46,4 +46,22 @@ public class CephConfiguration {
       CephS3Factory cephS3Factory) {
     return cephS3Factory.createCephService(uri, accessKey, secretKey);
   }
+
+  @Bean
+  public CephService excerptSignatureCephService(
+      @Value("${excerpt-signature-ceph.http-endpoint}") String uri,
+      @Value("${excerpt-signature-ceph.access-key}") String accessKey,
+      @Value("${excerpt-signature-ceph.secret-key}") String secretKey,
+      CephS3Factory cephS3Factory) {
+    return cephS3Factory.createCephService(uri, accessKey, secretKey);
+  }
+
+  @Bean
+  public CephService requestSignatureCephService(
+      @Value("${request-signature-ceph.http-endpoint}") String uri,
+      @Value("${request-signature-ceph.access-key}") String accessKey,
+      @Value("${request-signature-ceph.secret-key}") String secretKey,
+      CephS3Factory cephS3Factory) {
+    return cephS3Factory.createCephService(uri, accessKey, secretKey);
+  }
 }

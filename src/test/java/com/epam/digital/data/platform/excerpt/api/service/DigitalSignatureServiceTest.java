@@ -35,8 +35,7 @@ import com.epam.digital.data.platform.excerpt.api.exception.KepServiceBadRequest
 import com.epam.digital.data.platform.excerpt.api.exception.KepServiceInternalServerErrorException;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
 import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
-import com.epam.digital.data.platform.storage.form.dto.FormDataDto;
-import com.epam.digital.data.platform.storage.form.service.FormDataStorageService;
+import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
@@ -55,10 +54,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class DigitalSignatureServiceTest {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final String REQUEST_BUCKET = "REQUEST_BUCKET";
+  private static final String EXCERPT_BUCKET = "EXCERPT_BUCKET";
   private static final String X_DIG_SIG_DERIVED = "xDigitalSignatureHeaderDerived";
-  private static final FormDataDto RESPONSE_FROM_CEPH = FormDataDto.builder()
-      .signature("signature")
-      .build();
+  private static final String RESPONSE_FROM_CEPH = "{\"signature\":\"signature\",\"data\":\"\"}";
   private static final String SIGNATURE = "signature";
   private static final ErrorDto errorDto = ErrorDto.builder().message("error_message").build();
 
@@ -71,9 +70,9 @@ class DigitalSignatureServiceTest {
   private static String DATA_STR;
 
   @Mock
-  private FormDataStorageService lowcodeFormDataStorageService;
+  private CephService requestCephService;
   @Mock
-  private FormDataStorageService datafactoryExcerptDataStorageService;
+  private CephService excerptCephService;
   @Mock
   private DigitalSealRestClient digitalSealRestClient;
 
@@ -89,11 +88,10 @@ class DigitalSignatureServiceTest {
 
   @BeforeEach
   void init() {
-    digitalSignatureService = new DigitalSignatureService(lowcodeFormDataStorageService,
-        datafactoryExcerptDataStorageService,
-        digitalSealRestClient, OBJECT_MAPPER);
+    digitalSignatureService = new DigitalSignatureService(requestCephService, excerptCephService,
+        REQUEST_BUCKET, EXCERPT_BUCKET, digitalSealRestClient, OBJECT_MAPPER);
 
-    lenient().when(lowcodeFormDataStorageService.getFormData(X_DIG_SIG_DERIVED))
+    lenient().when(requestCephService.getAsString(REQUEST_BUCKET, X_DIG_SIG_DERIVED))
         .thenReturn(Optional.of(RESPONSE_FROM_CEPH));
   }
 
@@ -130,7 +128,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void cephServiceThrowsExceptionTest() {
-    when(lowcodeFormDataStorageService.getFormData(X_DIG_SIG_DERIVED))
+    when(requestCephService.getAsString(REQUEST_BUCKET, X_DIG_SIG_DERIVED))
         .thenThrow(new CephCommunicationException("", new RuntimeException()));
 
     assertThrows(CephCommunicationException.class,
@@ -139,7 +137,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void shouldThrowExceptionWhenSignatureNotFoundInCheckSignature() {
-    when(lowcodeFormDataStorageService.getFormData(X_DIG_SIG_DERIVED))
+    when(requestCephService.getAsString(REQUEST_BUCKET, X_DIG_SIG_DERIVED))
         .thenReturn(Optional.empty());
 
     assertThrows(DigitalSignatureNotFoundException.class,
@@ -148,7 +146,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void shouldThrowExceptionWhenSignatureNotFoundInSaveSignature() {
-    when(lowcodeFormDataStorageService.getFormData(X_DIG_SIG_DERIVED))
+    when(requestCephService.getAsString(REQUEST_BUCKET, X_DIG_SIG_DERIVED))
         .thenReturn(Optional.empty());
 
     assertThrows(DigitalSignatureNotFoundException.class,
@@ -174,10 +172,18 @@ class DigitalSignatureServiceTest {
   @Test
   void shouldCallMethodsWithAppropriateParameters() {
 
-    var result = digitalSignatureService.saveSignature(X_DIG_SIG_DERIVED);
+    String result = digitalSignatureService.saveSignature(X_DIG_SIG_DERIVED);
 
-    verify(lowcodeFormDataStorageService).getFormData(X_DIG_SIG_DERIVED);
-    verify(datafactoryExcerptDataStorageService).putFormData(X_DIG_SIG_DERIVED, RESPONSE_FROM_CEPH);
+    verify(requestCephService).getAsString(REQUEST_BUCKET, X_DIG_SIG_DERIVED);
+    verify(excerptCephService).put(EXCERPT_BUCKET, X_DIG_SIG_DERIVED, RESPONSE_FROM_CEPH);
     assertEquals(RESPONSE_FROM_CEPH, result);
+  }
+
+  @Test
+  void jsonProcessingExceptionChangedToRuntimeException() {
+    when(requestCephService.getAsString(any(),any())).thenReturn(Optional.of("{{"));
+
+    assertThrows(RuntimeException.class,
+        () -> digitalSignatureService.checkSignature(DATA_OBJ, X_DIG_SIG_DERIVED));
   }
 }
