@@ -16,6 +16,9 @@
 
 package com.epam.digital.data.platform.excerpt.api.config;
 
+import com.epam.digital.data.platform.integration.ceph.factory.CephS3Factory;
+import com.epam.digital.data.platform.storage.form.factory.StorageServiceFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,5 +30,11 @@ public class GenericConfig {
   @Bean
   public Clock clock() {
     return Clock.systemDefaultZone();
+  }
+
+  @Bean
+  public StorageServiceFactory storageServiceFactory(ObjectMapper objectMapper,
+      CephS3Factory cephS3Factory) {
+    return new StorageServiceFactory(objectMapper, cephS3Factory);
   }
 }

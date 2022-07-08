@@ -76,6 +76,9 @@ spec:
             - mountPath: /app/secrets/excerptsignatureceph
               name: {{ .Chart.Name }}-excerpt-signature-ceph-bucket-credentials
               readOnly: true
+            - name: {{ .Chart.Name }}-redis-credentials
+              mountPath: /app/secrets/redis
+              readOnly: true
           env:
             - name: JAVA_OPTS
               value: {{ .Values.java.javaOpts }}
@@ -138,6 +141,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.kafka.clusterName }}-cluster-ca-cert
                   key: ca.crt
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: password
       initContainers:
         - name: init
           image: {{ template "imageRegistry" . -}} busybox
@@ -195,3 +203,9 @@ spec:
                 path: excerpt-signature-ceph.access-key
               - key: AWS_SECRET_ACCESS_KEY
                 path: excerpt-signature-ceph.secret-key
+        - name: {{ .Chart.Name }}-redis-credentials
+          secret:
+            secretName: {{ .Values.redis.secretName }}
+            items:
+              - key: password
+                path: redis.password

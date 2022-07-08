@@ -61,8 +61,13 @@ data:
 
     storage:
       lowcode-form-form-data-storage:
-        type: ceph
+        type: redis
         backend:
+          redis:
+            password: ${REDIS_PASSWORD}
+            sentinel:
+              master: mymaster
+              nodes: rfs-redis-sentinel.{{ .Release.Namespace }}.svc:26379
           ceph:
             http-endpoint: ${request-signature-ceph.http-endpoint}
             access-key: ${request-signature-ceph.access-key}
