@@ -16,11 +16,9 @@
 
 package com.epam.digital.data.platform.excerpt.api.config;
 
-import com.epam.digital.data.platform.integration.ceph.factory.CephS3Factory;
 import com.epam.digital.data.platform.storage.form.config.CephStorageConfiguration;
 import com.epam.digital.data.platform.storage.form.factory.StorageServiceFactory;
 import com.epam.digital.data.platform.storage.form.service.FormDataStorageService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -29,12 +27,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class CephFormDataStorageConfig {
-
-  @Bean
-  public StorageServiceFactory storageServiceFactory(ObjectMapper objectMapper,
-      CephS3Factory cephS3Factory) {
-    return new StorageServiceFactory(objectMapper, cephS3Factory);
-  }
 
   @Bean
   @ConditionalOnProperty(prefix = "storage.lowcode-form-form-data-storage", name = "type", havingValue = "ceph")
