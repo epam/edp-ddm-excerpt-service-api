@@ -98,8 +98,6 @@ data-platform:
   kafka:
     producer:
       enabled: true
-      custom-config:
-        "[enable.idempotence]": true
     topic-properties:
       creation:
         enabled: true
