@@ -1,5 +1,13 @@
+{{- define "keycloak.host" -}}
+{{- if .Values.keycloak.customHost }}
+{{- .Values.keycloak.customHost }}
+{{- else }}
+{{- .Values.keycloak.host }}
+{{- end }}
+{{- end -}}
+
 {{- define "keycloak.urlPrefix" -}}
-{{- printf "%s%s%s%s" "https://" .Values.keycloak.host "/auth/realms/" .Release.Namespace -}}
+{{- printf "%s%s%s%s" "https://" (include "keycloak.host" .) "/auth/realms/" .Release.Namespace -}}
 {{- end -}}
 
 {{- define "issuer.officer" -}}
