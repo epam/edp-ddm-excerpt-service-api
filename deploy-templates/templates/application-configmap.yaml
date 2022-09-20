@@ -10,7 +10,6 @@ data:
     {{- else }}
     management.endpoints.web.exposure.include: 'health, prometheus'
     {{- end }}
-    server.max-http-header-size: 32KB
     data-platform:
       datasource:
         url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/{{.Values.db.name}}
