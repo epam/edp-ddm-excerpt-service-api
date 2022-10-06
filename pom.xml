@@ -15,12 +15,12 @@
     <excerpt.model.version>1.6.0.2</excerpt.model.version>
     <ddm.starter.kafka.version>1.6.0.2</ddm.starter.kafka.version>
     <ddm.starter.database.version>1.6.0.1</ddm.starter.database.version>
-    <ddm.starter.logger.version>1.6.0.1</ddm.starter.logger.version>
+    <ddm.starter.logger2.version>1.6.0.5</ddm.starter.logger2.version>
     <ddm.starter.swagger.version>1.6.0.1</ddm.starter.swagger.version>
-    <ddm.starter.actuator.version>1.6.0.1</ddm.starter.actuator.version>
+    <ddm.starter.actuator.version>1.6.0.3</ddm.starter.actuator.version>
     <ddm.starter.security.version>1.6.0.1</ddm.starter.security.version>
     <ddm.starter.audit.version>1.6.0.1</ddm.starter.audit.version>
-    <ddm.ceph.client.version>1.6.0.1</ddm.ceph.client.version>
+    <ddm.ceph.client.version>1.6.0.6</ddm.ceph.client.version>
     <digital.signature.ops.api.version>1.6.0.1</digital.signature.ops.api.version>
     <digital.signature.ops.client.version>1.6.0.1</digital.signature.ops.client.version>
     <ddm-form-data-storage.version>1.8.0.2</ddm-form-data-storage.version>
@@ -30,6 +30,7 @@
     <java.version>11</java.version>
     <spring.boot.version>2.6.1</spring.boot.version>
     <spring.cloud.version>2021.0.0</spring.cloud.version>
+    <snakeyaml.version>1.33</snakeyaml.version>
     <sonar.coverage.exclusions>
       <!-- do not calc coverage for the classes without BL: -->
       **/model/**/*,
@@ -66,6 +67,11 @@
         <artifactId>log4j-core</artifactId>
         <version>${log4j.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>${snakeyaml.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -93,7 +99,7 @@
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
       <artifactId>ddm-starter-logger2</artifactId>
-      <version>${ddm.starter.logger.version}</version>
+      <version>${ddm.starter.logger2.version}</version>
     </dependency>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
