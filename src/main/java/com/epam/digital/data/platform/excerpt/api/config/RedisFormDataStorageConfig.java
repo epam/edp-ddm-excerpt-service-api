@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 @Configuration
 public class RedisFormDataStorageConfig {
@@ -22,7 +23,14 @@ public class RedisFormDataStorageConfig {
   @Bean
   @ConditionalOnBean(name = "lowcodeRedisFormDataStorageConfiguration")
   public FormDataStorageService lowcodeFormDataStorageService(StorageServiceFactory factory,
+      RedisConnectionFactory redisConnectionFactory) {
+    return factory.formDataStorageService(redisConnectionFactory);
+  }
+
+  @Bean
+  @ConditionalOnBean(name = "lowcodeRedisFormDataStorageConfiguration")
+  public RedisConnectionFactory redisConnectionFactory(StorageServiceFactory factory,
       RedisStorageConfiguration lowcodeRedisFormDataStorageConfiguration) {
-    return factory.formDataStorageService(lowcodeRedisFormDataStorageConfiguration);
+    return factory.redisConnectionFactory(lowcodeRedisFormDataStorageConfiguration);
   }
 }
