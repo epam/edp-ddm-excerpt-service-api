@@ -21,6 +21,7 @@
     <ddm.starter.security.version>1.6.0.1</ddm.starter.security.version>
     <ddm.starter.audit.version>1.6.0.1</ddm.starter.audit.version>
     <ddm.ceph.client.version>1.6.0.6</ddm.ceph.client.version>
+    <spring-boot-maven-plugin.version>2.7.5</spring-boot-maven-plugin.version>
     <digital.signature.ops.api.version>1.6.0.1</digital.signature.ops.api.version>
     <digital.signature.ops.client.version>1.6.0.1</digital.signature.ops.client.version>
     <ddm-form-data-storage.version>1.8.0.2</ddm-form-data-storage.version>
@@ -294,6 +295,7 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring-boot-maven-plugin.version}</version>
         <executions>
           <execution>
             <goals>
