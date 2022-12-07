@@ -31,7 +31,11 @@
 {{- end -}}
 
 {{- define "issuer.admin" -}}
+{{- if .Values.keycloak.customHost }}
+{{- printf "%s-%s" (include "keycloak.customUrlPrefix" .) .Values.keycloak.realms.admin -}}
+{{- else }}
 {{- printf "%s-%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.admin -}}
+{{- end }}
 {{- end -}}
 
 {{- define "jwksUri.officer" -}}
