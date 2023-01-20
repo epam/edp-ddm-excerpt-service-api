@@ -29,8 +29,8 @@ import com.epam.digital.data.platform.dso.api.dto.VerificationResponseDto;
 import com.epam.digital.data.platform.dso.client.DigitalSealRestClient;
 import com.epam.digital.data.platform.dso.client.exception.BadRequestException;
 import com.epam.digital.data.platform.dso.client.exception.InternalServerErrorException;
+import com.epam.digital.data.platform.dso.client.exception.InvalidSignatureException;
 import com.epam.digital.data.platform.excerpt.api.exception.DigitalSignatureNotFoundException;
-import com.epam.digital.data.platform.excerpt.api.exception.InvalidSignatureException;
 import com.epam.digital.data.platform.excerpt.api.exception.KepServiceBadRequestException;
 import com.epam.digital.data.platform.excerpt.api.exception.KepServiceInternalServerErrorException;
 import com.epam.digital.data.platform.excerpt.model.ExcerptEventDto;
@@ -60,7 +60,7 @@ class DigitalSignatureServiceTest {
       .signature("signature")
       .build();
   private static final String SIGNATURE = "signature";
-  private static final ErrorDto errorDto = ErrorDto.builder().message("error_message").build();
+  private static final ErrorDto errorDto = ErrorDto.builder().code("code").message("error_message").build();
 
   private static final ExcerptEventDto DATA_OBJ = new ExcerptEventDto(
       UUID.fromString("11111111-1111-1111-1111-111111111111"),
@@ -165,7 +165,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void internalServerErrorExceptionChangedToKepServiceInternalServerErrorException() {
-    when(digitalSealRestClient.verify(any())).thenThrow(InternalServerErrorException.class);
+    when(digitalSealRestClient.verify(any())).thenThrow(new InternalServerErrorException(errorDto));
 
     assertThrows(KepServiceInternalServerErrorException.class, () -> digitalSignatureService
         .checkSignature(DATA_OBJ, X_DIG_SIG_DERIVED));
