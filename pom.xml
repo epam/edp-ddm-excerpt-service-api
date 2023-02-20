@@ -31,6 +31,7 @@
     <java.version>11</java.version>
     <spring.boot.version>2.6.14</spring.boot.version>
     <spring.cloud.version>2021.0.0</spring.cloud.version>
+    <postgresql.version>42.3.3</postgresql.version>
     <snakeyaml.version>1.33</snakeyaml.version>
     <sonar.coverage.exclusions>
       <!-- do not calc coverage for the classes without BL: -->
@@ -195,6 +196,7 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
+      <version>${postgresql.version}</version>
     </dependency>
 
     <dependency>
