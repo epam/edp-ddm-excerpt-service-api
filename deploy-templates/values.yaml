@@ -46,9 +46,6 @@ s3:
     options:
       pathStyleAccess: true
 
-requestSignatureCeph:
-  httpEndpoint: ${REQUEST_SIGNATURE_CEPH_BUCKET_HOST}
-  bucketName: lowcode-form-data-storage
 
 datafactoryExcerptCeph:
   httpEndpoint: ${DATAFACTORY_EXCERPT_CEPH_BUCKET_HOST}

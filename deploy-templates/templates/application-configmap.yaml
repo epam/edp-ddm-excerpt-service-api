@@ -38,9 +38,6 @@ data:
     dso:
       url: {{ .Values.dso.url }}
 
-    request-signature-ceph:
-      http-endpoint: {{ .Values.requestSignatureCeph.httpEndpoint }}
-      bucketName: {{ .Values.requestSignatureCeph.bucketName }}
     datafactory-excerpt-ceph:
       http-endpoint: {{ .Values.datafactoryExcerptCeph.httpEndpoint }}
       bucketName: {{ .Values.datafactoryExcerptCeph.bucketName }}
