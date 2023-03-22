@@ -17,7 +17,7 @@ spec:
     metadata:
       annotations:
         sidecar.istio.io/inject: "true"
-        traffic.sidecar.istio.io/excludeOutboundPorts: '5432,6379'
+        traffic.sidecar.istio.io/excludeOutboundPorts: '5432,6379,9093'
       labels:
         app: {{ .Values.name }}
         version: {{ .Values.version }}
@@ -134,21 +134,14 @@ spec:
                   name: {{ .Values.redis.secretName }}
                   key: password
       initContainers:
-        - name: init
+        - name: init-db
           image: {{ template "imageRegistry" . -}} busybox
           imagePullPolicy: IfNotPresent
           command: ["sh", "-c", "while ! nc -w 1 {{ .Values.db.url }} {{ .Values.db.port }} </dev/null; do echo waiting for {{ .Values.db.url }}; sleep 10; done;"]
-          env:
-            - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.db.secret }}
-                  key: excerptSvcName
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.db.secret }}
-                  key: excerptSvcPass
+        - name: init-kafka
+          image: {{ template "imageRegistry" . -}} busybox
+          imagePullPolicy: IfNotPresent
+          command: [ "sh", "-c", "while ! nc -w 1 {{ .Values.kafka.url }} {{ .Values.kafka.port }} </dev/null; do echo waiting for {{ .Values.kafka.url }}; sleep 10; done;" ]
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
