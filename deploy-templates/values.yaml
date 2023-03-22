@@ -22,7 +22,8 @@ ingress:
   site: excerpt-api
 
 kafka:
-  service: kafka-cluster-kafka-bootstrap:9093
+  url: kafka-cluster-kafka-bootstrap
+  port: 9093
   user: excerpt-api-user
   clusterName: kafka-cluster
   sslEnabled: true

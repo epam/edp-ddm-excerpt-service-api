@@ -54,7 +54,7 @@ management:
       show-details: always
       group:
         liveness:
-          include: livenessState, livenessResponseCheck
+          include: livenessState, livenessResponseCheck, kafka
         readiness:
           include: readinessState, db, kafka, redis
     loggers:
