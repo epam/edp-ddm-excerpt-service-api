@@ -18,7 +18,7 @@
     <ddm.starter.logger2.version>1.6.0.5</ddm.starter.logger2.version>
     <ddm.starter.swagger.version>1.6.0.1</ddm.starter.swagger.version>
     <ddm.starter.actuator.version>1.6.0.3</ddm.starter.actuator.version>
-    <ddm.starter.security.version>1.6.0.1</ddm.starter.security.version>
+    <ddm.starter.security.version>1.6.0.13</ddm.starter.security.version>
     <ddm.starter.audit.version>1.6.0.1</ddm.starter.audit.version>
     <ddm.ceph.client.version>1.6.0.6</ddm.ceph.client.version>
     <spring-boot-maven-plugin.version>2.7.5</spring-boot-maven-plugin.version>
