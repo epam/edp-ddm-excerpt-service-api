@@ -12,7 +12,7 @@ data:
     {{- end }}
     data-platform:
       datasource:
-        url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/{{.Values.db.name}}
+        url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/{{.Values.db.name}}?ApplicationName={{ .Chart.Name }}
         connection-timeout: {{.Values.db.connectionTimeout}}
       kafka:
         bootstrap: {{ .Values.kafka.url }}:{{ .Values.kafka.port }}
