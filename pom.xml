@@ -16,7 +16,6 @@
     <ddm.starter.kafka.version>1.6.0.2</ddm.starter.kafka.version>
     <ddm.starter.database.version>1.6.0.1</ddm.starter.database.version>
     <ddm.starter.logger2.version>1.6.0.5</ddm.starter.logger2.version>
-    <ddm.starter.swagger.version>1.6.0.1</ddm.starter.swagger.version>
     <ddm.starter.actuator.version>1.6.0.3</ddm.starter.actuator.version>
     <ddm.starter.security.version>1.6.0.13</ddm.starter.security.version>
     <ddm.starter.audit.version>1.6.0.1</ddm.starter.audit.version>
@@ -33,6 +32,7 @@
     <spring.cloud.version>2021.0.0</spring.cloud.version>
     <postgresql.version>42.3.3</postgresql.version>
     <snakeyaml.version>1.33</snakeyaml.version>
+    <springdoc.openapi.ui.version>1.6.9</springdoc.openapi.ui.version>
     <sonar.coverage.exclusions>
       <!-- do not calc coverage for the classes without BL: -->
       **/model/**/*,
@@ -92,11 +92,6 @@
       <groupId>com.epam.digital.data.platform</groupId>
       <artifactId>ddm-starter-actuator</artifactId>
       <version>${ddm.starter.actuator.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-starter-swagger</artifactId>
-      <version>${ddm.starter.swagger.version}</version>
     </dependency>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
@@ -197,6 +192,12 @@
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>${postgresql.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-ui</artifactId>
+      <version>${springdoc.openapi.ui.version}</version>
     </dependency>
 
     <dependency>
@@ -303,6 +304,47 @@
             <goals>
               <goal>repackage</goal>
             </goals>
+          </execution>
+          <execution>
+            <id>pre-integration-test</id>
+            <goals>
+              <goal>start</goal>
+            </goals>
+            <configuration>
+              <useTestClasspath>true</useTestClasspath>
+              <directories>${project.build.testOutputDirectory}</directories>
+              <mainClass>com.epam.digital.data.platform.excerpt.api.TestApp</mainClass>
+              <jvmArguments>
+                -Dspring.profiles.active=test
+                -Ddata-platform.kafka.enabled=false
+                -Dmanagement.health.kafka.enabled=false
+              </jvmArguments>
+              <wait>1000</wait>
+            </configuration>
+          </execution>
+          <execution>
+            <id>post-integration-test</id>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-maven-plugin</artifactId>
+        <version>1.4</version>
+        <executions>
+          <execution>
+            <phase>integration-test</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <apiDocsUrl>http://localhost:8080/v3/api-docs.yaml</apiDocsUrl>
+              <outputFileName>swagger.yml</outputFileName>
+              <outputDir>openapi</outputDir>
+            </configuration>
           </execution>
         </executions>
       </plugin>

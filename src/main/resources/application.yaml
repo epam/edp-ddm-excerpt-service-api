@@ -79,6 +79,7 @@ platform:
       - /v3/api-docs/**
       - /swagger-ui/**
       - /actuator/**
+      - /v3/api-docs.yaml
 
 logbook:
   exclude:
